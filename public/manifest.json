@@ -1,0 +1,24 @@
+{
+  "short_name": "MovieMachi",
+  "name": "MovieMachi Premium Tamil Cinema Portal",
+  "description": "Premium Tamil Cinema Streaming Portal with seamless resuming, custom player, and robust offline support.",
+  "icons": [
+    {
+      "src": "/moviemachi_logo.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/moviemachi_logo.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#030307",
+  "theme_color": "#e50914",
+  "display": "standalone",
+  "orientation": "any"
+}

@@ -1,0 +1,82 @@
+{
+  "entities": {
+    "Movie": {
+      "title": "Movie",
+      "description": "Information about a specific movie asset inside the MovieMachi OTT portal.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Unique full identifier title containing the release year"
+        },
+        "image": {
+          "type": "string",
+          "description": "Secure URL to the poster canvas image asset"
+        },
+        "movieName": {
+          "type": "string",
+          "description": "Human-friendly short title name of the film"
+        },
+        "director": {
+          "type": "string",
+          "description": "The director of the film"
+        },
+        "starring": {
+          "type": "string",
+          "description": "Starred actors or casts in comma-separated credits"
+        },
+        "genres": {
+          "type": "array",
+          "description": "Categorized visual tags representing target audiences"
+        },
+        "quality": {
+          "type": "string",
+          "description": "Highest quality print indexed"
+        },
+        "language": {
+          "type": "string",
+          "description": "Voice audio stream language dialect"
+        },
+        "rating": {
+          "type": "string",
+          "description": "Aggregated user rating score"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "description": "Clean human calendar modified timestamp"
+        },
+        "watchUrl": {
+          "type": "string",
+          "description": "High-fidelity playable direct link"
+        },
+        "trailerUrl": {
+          "type": "string",
+          "description": "Direct preview asset URL"
+        },
+        "links": {
+          "type": "array",
+          "description": "List of dynamic high speed downlinks"
+        }
+      },
+      "required": [
+        "title",
+        "image",
+        "movieName",
+        "director",
+        "starring",
+        "genres",
+        "quality",
+        "language",
+        "rating",
+        "lastUpdated",
+        "links"
+      ]
+    }
+  },
+  "firestore": {
+    "/movies/{movieId}": {
+      "schema": "Movie",
+      "description": "Master library collections of premium curated release assets"
+    }
+  }
+}

@@ -1,0 +1,380 @@
+import { Movie } from "../types";
+
+export const moviesGroup3: Movie[] = [
+  {
+    title: "Vaa Vaathiyaar (2026)",
+    image: "https://imgs.search.brave.com/BfLxD9qpkJa8YpEuk_BR2QW8TTPLk7LnflKCh0fOjZ4/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9wcmV2/aWV3LnJlZGQuaXQv/bW92aWUtcmV3cml0/ZS12YWEtdmFhdGhp/eWFhci0yMDI2LXYw/LXVhZW00bnVpaGlk/ZzEuanBnP3dpZHRo/PTEwNjcmZm9ybWF0/PXBqcGcmYXV0bz13/ZWJwJnM9MzY4NmY1/MThhOWFjN2RkZmM4/N2IwMzgwNjhlYjlj/ZmIyZWY1YWZlYg",
+    movieName: "Vaa Vaathiyaar (2026)",
+    director: "Nalan Kumarasamy",
+    starring: "Karthi, Sathyaraj, Krithi Shetty",
+    genres: ["Action", "Comedy"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "5.7/10",
+    lastUpdated: "28 January 2026",
+    links: [
+      { label: "Download 360p", url: "https://s01.hotshare.link/Moviesda.Mobi_-_Vaa_Vaathiyaar_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://dl3.biggshare.xyz/Moviesda.Mobi_-_Vaa_Vaathiyaar_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://dl9.biggshare.xyz/Moviesda.Mobi_-_Vaa_Vaathiyaar_2026_Original_1080p_HD__3.5_GB_.mp4", className: "p1080" },
+    ],
+    watchUrl: "https://s01.hotshare.link/Moviesda.Mobi_-_Vaa_Vaathiyaar_2026_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Sirai (2025)",
+    image: "https://imgs.search.brave.com/jtRUTdEJEUYGPfnEzKPp3UqRphcXZWPRlUXgKrgFyOQ/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9jZG4u/ZGlzdHJpY3QuaW4v/bW92aWVzLWFzc2V0/cy9pbWFnZXMvY2lu/ZW1hL1NpcmFpX0dh/bGxlcnktODA3YzU5/MjAtNzgzOC0xMWYw/LThkZjMtZGIwMWQx/YmFhNDQ0LmpwZz9p/bT1SZXNpemUsd2lk/dGg9MzIw",
+    movieName: "Sirai (2025)",
+    director: "Suresh Rajakumari",
+    starring: "Vikram Prabhu, L. K. Akshay Kumar, Anishma Anilkumar",
+    genres: ["Action", "Drama", "Thriller"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "9.4/10",
+    lastUpdated: "23 January 2026",
+    links: [
+      { label: "Download 360p", url: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPWU1ZDU0MzBiNWEzYjcwZWQxNzI2YTJkOWUxMDNmYmFjJmV4cD0xNzgwOTAyMjc1JnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvU2lyYWkgKDIwMjUpL1NpcmFpIChPcmlnaW5hbCkvU2lyYWkgKDM2MHAgSEQpL01vdmllc2RhLk1vYmkgLSBTaXJhaSAyMDI1IE9yaWdpbmFsIDM2MHAgSEQubXA0", className: "p480" },
+      { label: "Download 720p", url: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPTI3NjhhMWI5NTg5Y2U2MGY0YjdiY2EyZDViY2VjOWU3JmV4cD0xNzgwOTAyMzAxJnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvU2lyYWkgKDIwMjUpL1NpcmFpIChPcmlnaW5hbCkvU2lyYWkgKDcyMHAgSEQpL01vdmllc2RhLk1vYmkgLSBTaXJhaSAyMDI1IE9yaWdpbmFsIDcyMHAgSEQubXA0", className: "p720" },
+      { label: "Download 1080p", url: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPTU1YzhkODE3MGQ4ZjVjMzI0MGIxZGRhMzI0ODkyZjA2JmV4cD0xNzgwOTAyMzY5JnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvU2lyYWkgKDIwMjUpL1NpcmFpIChPcmlnaW5hbCkvU2lyYWkgKDEwODBwIEhEKS9Nb3ZpZXNkYS5Nb2JpIC0gU2lyYWkgMjAyNSBPcmlnaW5hbCAxMDgwcCBIRCAoMi40IEdCKS5tcDQ=", className: "p1080" },
+    ],
+    watchUrl: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPTg2ZjYyMzQ4MWE3YTA2MjU2N2RkNWZjMTQ0MTQxNjU4JmV4cD0xNzc5OTM3MTE4JnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvU2lyYWkgKDIwMjUpL1NpcmFpIChPcmlnaW5hbCkvU2lyYWkgKDcyMHAgSEQpL01vdmllc2RhLk1vYmkgLSBTaXJhaSAyMDI1IE9yaWdpbmFsIDcyMHAgSEQubXA0&stream=1"
+  },
+  {
+    title: "Tere Ishk Mein (2025)",
+    image: "https://imgs.search.brave.com/cPjTzQ70SMiUWwG0r4gHKTQTxCVovuhpqFaAH5zMKi8/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9jZG4u/ZGlzdHJpY3QuaW4v/bW92aWVzLWFzc2V0/cy9pbWFnZXMvY2lu/ZW1hL1RlcmUtSXNo/ay1NZWluX0NvdmVy/LWUzYWU3YjkwLWMx/NzYtMTFmMC1hYjk4/LTk1ZjhmYjJkOGEw/OC5qcGc",
+    movieName: "Tere Ishk Mein (2025)",
+    director: "Aanand L. Rai",
+    starring: "Dhanush, Kriti Sanon",
+    genres: ["Drama", "Romantic"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "9.1/10",
+    lastUpdated: "23 January 2026",
+    links: [
+      { label: "Download 360p", url: "https://www.tamilprint60.art/filedownload.php?fid=40960&tt=16fee37559dbd42b448204446d02089f", className: "p480" },
+      { label: "Download 720p", url: "https://www.tamilprint60.art/filedownload.php?fid=40968&tt=16fee37559dbd42b448204446d02089f", className: "p720" },
+      { label: "Download 1080p", url: "https://www.tamilprint60.art/filedownload.php?fid=40970&tt=16fee37559dbd42b448204446d02089f", className: "p1080" },
+    ],
+    watchUrl: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPWZhODg0Y2NkM2VlNzA0NjMyZDEzODA3MzkxOTI2OWRlJmV4cD0xNzc5OTM3MTc2JnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvVGVyZSBJc2hrIE1laW4gKDIwMjUpL1RlcmUgSXNoayBNZWluIChPcmlnaW5hbCkvVGVyZSBJc2hrIE1laW4gKDcyMHAgSEQpL01vdmllc2RhLk1vYmkgLSBUZXJlIElzaGsgTWVpbiAyMDI1IE9yaWdpbmFsIDcyMHAgSEQubXA0&stream=1"
+  },
+  {
+    title: "Galatta Family (2025)",
+    image: "https://imgs.search.brave.com/hsEuVdliBeHZcwPuUJgFFf7BG7Ip0lvvyYHm4X2XlrM/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9jZG4u/ZGlzdHJpY3QuaW4v/bW92aWVzLWFzc2V0/cy9pbWFnZXMvY2lu/ZW1hL2dhbGxlcnkl/MjAoNCktYmE1ZGY5/MTAtZDAyYS0xMWYw/LWI5YzktNjFmMDk4/MDdiMDNkLmpwZz9p/bT1SZXNpemUsd2lk/dGg9MzIw",
+    movieName: "Galatta Family (2025)",
+    director: "A. Sarkunam",
+    starring: "Vemal, Anicka Vikhraman, Thambi Ramaiah",
+    genres: ["Comedy", "Drama"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "7.1/10",
+    lastUpdated: "25 April 2026",
+    links: [
+      { label: "Download 360p", url: "https://s23.cdnserver03.xyz/Moviesda.Mobi_-_Galatta_Family_2025_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s23.cdnserver03.xyz/Moviesda.Mobi_-_Galatta_Family_2025_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s11.cdnserver02.xyz/Moviesda.Mobi_-_Galatta_Family_2025_Original_1080p_HD_(3.5_GB).mp4", className: "p1080" }
+    ],
+    watchUrl: "https://s25.cdnserver03.xyz/Moviesda.Mobi_-_Galatta_Family_2025_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Prathichaya (2026)",
+    image: "https://imgs.search.brave.com/_XAK1_FvKIikgytRTnxv84qxApzSTnoNzRywLMDmJUo/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9pbWFn/ZS50bWRiLm9yZy90/L3AvdzYwMF9hbmRf/aDkwMF9iZXN0djIv/bzY5WUtGZDVXU3dY/MWY5UEJHNDdRZmNH/elg0LmpwZw",
+    movieName: "Prathichaya (2026)",
+    director: "Unnikrishnan B.",
+    starring: "Nivin Pauly, Sharafudheen, Balachandra Menon",
+    genres: ["Drama", "Political", "Thriller"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "8.8/10",
+    lastUpdated: "24 April 2026",
+    links: [
+      { label: "Download 360p", url: "https://s32.cdnserver04.xyz/Prathichaya_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s14.cdnserver02.xyz/Prathichaya_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s31.cdnserver04.xyz/Prathichaya_2026_Original_1080p_HD_(3.5_GB).mp4", className: "p1080" },
+    ],
+    watchUrl: "https://s13.cdnserver02.xyz/Prathichaya_2026_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Happy Raj (2026)",
+    image: "https://imgs.search.brave.com/pHkWy6VTUkic21cyvZHlnS79dOMc1oHi-Radc9YaLis/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9hc3Nl/dHMtaW4uYm1zY2Ru/LmNvbS9pZWRiL21v/dmllcy9pbWFnZXMv/bW9iaWxlL3RodW1i/bmFpbC94bGFyZ2Uv/aGFwcHktcmFqLWV0/MDA0OTAwOTctMTc3/MjYxMjQ2Mi5qcGc",
+    movieName: "Happy Raj (2026)",
+    director: "Maria Raja Elanchezian",
+    starring: "G. V. Prakash Kumar, Abbas, Sri Gouri Priya",
+    genres: ["Comedy", "Drama", "Romantic"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "6.9/10",
+    lastUpdated: "24 April 2026",
+    links: [
+      { label: "Download 360p", url: "https://s05.cdnserver01.xyz/Moviesda.Mobi_-_Happy_Raj_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s14.cdnserver02.xyz/Moviesda.Mobi_-_Happy_Raj_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s13.cdnserver02.xyz/Moviesda.Mobi_-_Happy_Raj_2026_Original_1080p_HD_(3.5_GB).mp4", className: "p1080" },
+    ],
+    watchUrl: "https://s31.cdnserver04.xyz/Moviesda.Mobi_-_Happy_Raj_2026_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Mustafa Mustafa (2026)",
+    image: "https://imgs.search.brave.com/aGB2d27Q4xXnJVFHNcgywgsHDWHgPmYBM6k1lWOxv30/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5jaW5lbWFleHBy/ZXNzLmNvbS9jaW5l/bWFleHByZXNzLzIw/MjYtMDMtMDUvc3c4/YTdoanAvZXQwMDQ5/MDA1NS1xZ2R3enZj/YXlhLWxhbmRzY2Fw/ZS5hdmlmP3c9NDgw/JmF1dG89Zm9ybWF0/LGNvbXByZXNzJmZp/dD1tYXg",
+    movieName: "Mustafa Mustafa (2026)",
+    director: "Praveen Saravanan",
+    starring: "Sathish Muthukrishnan, Suresh Ravi, Monica Chinnakotla",
+    genres: ["Comedy"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "6.6/10",
+    lastUpdated: "17 April 2026",
+    links: [
+      { label: "Download 360p", url: "https://s31.cdnserver04.xyz/Moviesda.Mobi_-_Mustafa_Mustafa_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s02.cdnserver01.xyz/Moviesda.Mobi_-_Mustafa_Mustafa_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s15.cdnserver02.xyz/Moviesda.Mobi_-_Mustafa_Mustafa_2026_Original_1080p_HD_(3.6_GB).mp4", className: "p1080" },
+    ],
+    watchUrl: "https://s24.cdnserver03.xyz/Moviesda.Mobi_-_Mustafa_Mustafa_2026_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Youth (2026)",
+    image: "https://imgs.search.brave.com/ki52FTSO9MiGhWf1z8qlxAwMsbcW8u4hTEqddRpKNRU/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9jZG4u/ZGlzdHJpY3QuaW4v/bW92aWVzLWFzc2V0/cy9pbWFnZXMvY2lu/ZW1hL1lvdXRoX0dh/bGxlcnktNjM5ZTg1/MTAtMDVhMi0xMWYx/LWFjMWYtMzM5MWRi/ZjA0NWU1LmpwZz9p/bT1SZXNpemUsd2lk/dGg9MzIw",
+    movieName: "Youth (2026)",
+    director: "Ken Karunas",
+    starring: "Ken Karunas, Anishma Anilkumar, Devadarshini",
+    genres: ["Comedy", "Drama", "Romantic"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "9.3/10",
+    lastUpdated: "16 April 2026",
+    links: [
+      { label: "Download 360p", url: "https://s22.cdnserver03.xyz/Moviesda.Mobi_-_Youth_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s31.cdnserver04.xyz/Moviesda.Mobi_-_Youth_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s23.cdnserver03.xyz/Moviesda.Mobi_-_Youth_2026_Original_1080p_HD_(3.6_GB).mp4", className: "p1080" },
+    ],
+    watchUrl: "https://s35.cdnserver04.xyz/Moviesda.Mobi_-_Youth_2026_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Suyodhana (2026)",
+    image: "https://imgs.search.brave.com/N3mLYrK6WwM5XPoN3_9fC_4-UkqArlj2F4egOZJ8j00/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9wcmV2/aWV3LnJlZGQuaXQv/YXlvLXRoaXMtZmls/bXMtcHJldHR5LWdv/b2QtZm9yLWl0cy1s/b3ctYnVkZ2V0LXN1/eW9kaGFuYS12MC1i/ZHI0YXRudmMzd2cx/LmpwZWc_d2lkdGg9/NjQwJmNyb3A9c21h/cnQmYXV0bz13ZWJw/JnM9ZTkyMTMzOTUz/NTU4NDhhZGNhYzEz/NGYzZDM4NDQwNmFl/YjA3MjM3NQ",
+    movieName: "Suyodhana (2026)",
+    director: "Y.S. Madav Reddy",
+    starring: "Priyadarshi Pulikonda, Drishika Chandar, Saikumar Pudipeddi",
+    genres: ["Drama", "Mystery", "Thriller"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "9.1/10",
+    lastUpdated: "17 April 2026",
+    links: [
+      { label: "Download 360p", url: "https://s03.cdnserver01.xyz/Moviesda.Mobi_-_Suyodhana_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s02.cdnserver01.xyz/Moviesda.Mobi_-_Suyodhana_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s33.cdnserver04.xyz/Moviesda.Mobi_-_Suyodhana_2026_Original_1080p_HD_(3.5_GB).mp4", className: "p1080" },
+    ],
+    watchUrl: "https://s15.cdnserver02.xyz/Moviesda.Mobi_-_Suyodhana_2026_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Kaa The Forest (2026)",
+    image: "https://imgs.search.brave.com/XYhcUot_gIil2DRYEy8K4wmSMqI3miodU2KHbIEsF54/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9pbWFn/ZXMubW92aWVidWZm/LmNvbS81YzdjNWNm/Ni0yNDgyLTQwYWIt/OTRmNC1kZTE2MWQw/MTViZTg_dz01MDA",
+    movieName: "Kaa The Forest (2026)",
+    director: "Nanjil Nagarajan",
+    starring: "Andrea Jeremiah, Salim Ghouse, Marimuthu",
+    genres: ["Adventure", "Crime", "Thriller"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "8.5/10",
+    lastUpdated: "17 April 2026",
+    links: [
+      { label: "Download 360p", url: "https://s01.cdnserver01.xyz/Moviesda.Mobi_-_Kaa_The_Forest_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s21.cdnserver03.xyz/Moviesda.Mobi_-_Kaa_The_Forest_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s15.cdnserver02.xyz/Moviesda.Mobi_-_Kaa_The_Forest_2026_Original_1080p_HD_(2.3_GB).mp4", className: "p1080" }
+    ],
+    watchUrl: "https://s13.cdnserver02.xyz/Moviesda.Mobi_-_Kaa_The_Forest_2026_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Second Case of Seetharam (2026)",
+    image: "https://imgs.search.brave.com/Lcu9akNJzmv6T4ng1JEElUYDCVWN5V8x2VGPhB8OEu0/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9pbWFn/ZXMuZmlsbWliZWF0/LmNvbS9pbWcvcG9w/Y29ybi9tb3ZpZV9s/aXN0cy9zZWNvbmQt/Y2FzZS1vZi1zZWV0/aGFyYW0tb3R0LXJl/bGVhc2Utd2hlbi1h/bmQtd2hlcmUtdG8t/d2F0Y2gtdmlqYXkt/cmFnaGF2ZW5kcmFz/LWxhdGVzdC1pbnZl/c3RpZ2F0aW9uLXRo/cmlsbGVyLW9ubGlu/ZS0yMDI2MDQxNzEw/NTA1MS04NTM3Lmpw/Zw", /* note fallback link */
+    movieName: "Second Case of Seetharam (2026)",
+    director: "Devi Prasad Shetty",
+    starring: "Vijay Raghavendra, Gopal Krishna Deshpande, Usha Bhandari",
+    genres: ["Crime", "Thriller"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "8.9/10",
+    lastUpdated: "17 April 2026",
+    links: [
+      { label: "Download 360p", url: "https://s05.cdnserver01.xyz/Moviesda.Mobi_-_Second_Case_of_Seetharam_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s21.cdnserver03.xyz/Moviesda.Mobi_-_Second_Case_of_Seetharam_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s34.cdnserver04.xyz/Moviesda.Mobi_-_Second_Case_of_Seetharam_2026_Original_1080p_HD_(3.0_GB).mp4", className: "p1080" }
+    ],
+    watchUrl: "https://s25.cdnserver03.xyz/Moviesda.Mobi_-_Second_Case_of_Seetharam_2026_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Ustaad Bhagat Singh (2026)",
+    image: "https://imgs.search.brave.com/Rf42EyhUtvAIEvWuR3do_bG_bM2EiS87U8F_k8fivig/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9jZG4u/ZGlzdHJpY3QuaW4v/bW92aWVzLWFzc2V0/cy9pbWFnZXMvY2lu/ZW1hL1VzdGFhZC1C/aGFnYXQtU2luZ2gt/M2JiNGZiNjAtZjEx/MS0xMWYwLWJjYTMt/MzE4OGE2ZTcyOTQ2/LmpwZz9pbT1SZXNp/emUsd2lkdGg9MzIw",
+    movieName: "Ustaad Bhagat Singh (2026)",
+    director: "Harish Shankar",
+    starring: "Pawan Kalyan, Sree Leela, Raashi Khanna",
+    genres: ["Action", "Comedy", "Drama"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "7.1/10",
+    lastUpdated: "16 April 2026",
+    links: [
+      { label: "Download 360p", url: "https://s34.cdnserver04.xyz/Moviesda.Mobi_-_Ustaad_Bhagat_Singh_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s34.cdnserver04.xyz/Moviesda.Mobi_-_Ustaad_Bhagat_Singh_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s34.cdnserver04.xyz/Moviesda.Mobi_-_Ustaad_Bhagat_Singh_2026_Original_1080p_HD_(3.5_GB).mp4", className: "p1080" },
+    ],
+    watchUrl: "https://s32.cdnserver04.xyz/Moviesda.Mobi_-_Ustaad_Bhagat_Singh_2026_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Toaster (2026)",
+    image: "https://imgs.search.brave.com/2KtmzjdKSHMFtaPnBgiTb_fFZ4AyQyQwMal9R7EcTes/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9pbWFn/ZS50bWRiLm9yZy90/L3AvdzYwMF9hbmRf/aDkwMF9iZXN0djIv/YlFoQ3NjTDd5Vjhx/dG9kMm1EcEphNlMy/OFZKLmpwZw",
+    movieName: "Toaster (2026)",
+    director: "Vivek Daschaudhary",
+    starring: "Rajkummar Rao, Sanya Malhotra, Abhishek Banerjee",
+    genres: ["Comedy", "Drama"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "7.8/10",
+    lastUpdated: "15 April 2026",
+    links: [
+      { label: "Download 360p", url: "https://s23.cdnserver03.xyz/Moviesda.Mobi_-_Toaster_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s34.cdnserver04.xyz/Moviesda.Mobi_-_Toaster_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s03.cdnserver01.xyz/Moviesda.Mobi_-_Toaster_2026_Original_1080p_HD_(3.2_GB).mp4", className: "p1080" }
+    ],
+    watchUrl: "https://s32.cdnserver04.xyz/Moviesda.Mobi_-_Toaster_2026_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Sambavam Adhyayam Onnu (2026)",
+    image: "https://imgs.search.brave.com/xcD7rbwRRPbdIwTrIQVtMIh_0aavoaGvaUOFXemJgfg/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9zdGF0/aWMudG9paW1nLmNv/bS90aHVtYi9tc2lk/LTEyODQ0MzUyNSxp/bWdzaXplLTk0NjUy/LHdpZHRoLTQwMCxy/ZXNpemVtb2RlLTQv/MTI4NDQzNTI1Lmpw/Zw",
+    movieName: "Sambavam Adhyayam Onnu (2026)",
+    director: "Jithu Satheesan Mangalathu",
+    starring: "Askar Ali, Vineeth Kumar, Sidharth Bharathan",
+    genres: ["Mystery", "Thriller"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "8.5/10",
+    lastUpdated: "15 April 2026",
+    links: [
+      { label: "Download 360p", url: "https://s25.cdnserver03.xyz/Sambavam_Adhyayam_Onnu_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s12.cdnserver02.xyz/Sambavam_Adhyayam_Onnu_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s23.cdnserver03.xyz/Sambavam_Adhyayam_Onnu_2026_Original_1080p_HD_(3.3_GB).mp4", className: "p1080" },
+    ],
+    watchUrl: "https://s23.cdnserver03.xyz/Sambavam_Adhyayam_Onnu_2026_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Her (2026)",
+    image: "https://imgs.search.brave.com/2McSt3W9JXLo1JZ6DwGaKbh33fem7Issf4VhBwlJ63Y/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zMy5h/cC1zb3V0aC0xLmFt/YXpvbmF3cy5jb20v/bWVkaWEudGhlc291/dGhmaXJzdC5jb20v/d3AtY29udGVudC91/cGxvYWRzLzIwMjQv/MTEvQS1wb3N0ZXIt/b2YtdGhlLWZpbG0t/SGVyLTEuanBn",
+    movieName: "Her (2026)",
+    director: "Lijin Jose",
+    starring: "Urvashi, Parvathy Thiruvothu, Aishwarya Rajesh",
+    genres: ["Anthology", "Drama"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "8.1/10",
+    lastUpdated: "13 April 2026",
+    links: [
+      { label: "Download 360p", url: "https://s22.cdnserver03.xyz/Her_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s35.cdnserver04.xyz/Her_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s12.cdnserver02.xyz/Her_2026_Original_1080p_HD_(1.7_GB).mp4", className: "p1080" }
+    ],
+    watchUrl: "https://s35.cdnserver04.xyz/Her_2026_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Thaai Kizhavi (2026)",
+    image: "https://imgs.search.brave.com/CXAtoY8iuB34IkUj5Cl_S5VJBdDsHLcVyzGepoGQJXE/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tLm1l/ZGlhLWFtYXpvbi5j/b20vaW1hZ2VzL00v/TVY1QlpUQXhZemRs/WVRJdFlqWTFNaTAw/WXpaakxUZzJOekl0/TWpZM1pHTTRNVE0x/WkdOa1hrRXlYa0Zx/Y0djQC5qcGc",
+    movieName: "Thaai Kizhavi (2026)",
+    director: "Sivakumar Murugesan",
+    starring: "Raadhika Sarathkumar, Singam Puli, Aruldoss",
+    genres: ["Comedy", "Drama"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "7.7/10",
+    lastUpdated: "10 April 2026",
+    links: [
+      { label: "Download 360p", url: "https://s22.cdnserver03.xyz/Moviesda.Mobi_-_Thaai_Kizhavi_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s25.cdnserver03.xyz/Moviesda.Mobi_-_Thaai_Kizhavi_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s33.cdnserver04.xyz/Moviesda.Mobi_-_Thaai_Kizhavi_2026_Original_1080p_HD_(3.5_GB).mp4", className: "p1080" },
+    ],
+    watchUrl: "https://s12.cdnserver02.xyz/Moviesda.Mobi_-_Thaai_Kizhavi_2026_Original_720p_HD_(950_MB).mp4?stream=1"
+  },
+  {
+    title: "Kadhal Kadhai Sollava (2026)",
+    image: "https://imgs.search.brave.com/ne-QQbhEsTQhfQZfhcdGvu7S0ePy1W9tBYETr3obvP8/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9hc3Nl/dHMtaW4uYm1zY2Ru/LmNvbS9pZWRiL21v/dmllcy9pbWFnZXMv/bW9iaWxlL3RodW1i/bmFpbC94bGFyZ2Uv/a2FkaGFsLWthZGhh/aS1zb2xsYXZhLWV0/MDA0ODQ4NTEtMTc3/MDIwOTE4MC5qcGc",
+    movieName: "Kadhal Kadhai Sollava (2026)",
+    director: "Sanil Kalathil",
+    starring: "Vijay Sethupathi, Jayaram Subramaniam, Athmiya Rajan",
+    genres: ["Drama", "Romantic"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "9.3/10",
+    lastUpdated: "10 April 2026",
+    links: [
+      { label: "Download 360p", url: "https://s15.cdnserver02.xyz/Moviesda.Mobi_-_Kadhal_Kadhai_Sollava_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s32.cdnserver04.xyz/Moviesda.Mobi_-_Kadhal_Kadhai_Sollava_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s12.cdnserver02.xyz/Moviesda.Mobi_-_Kadhal_Kadhai_Sollava_2026_Original_1080p_HD_(3.6_GB).mp4", className: "p1080" },
+    ],
+    watchUrl: "https://s12.cdnserver02.xyz/Moviesda.Mobi_-_Kadhal_Kadhai_Sollava_2026_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Kadhal Reset Repeat (2026)",
+    image: "https://imgs.search.brave.com/rJbfxWKO8cr3SBz6lADbgi0F_jYGsG-uxH_Q8VvJ1BM/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tLm1l/ZGlhLWFtYXpvbi5j/b20vaW1hZ2VzL00v/TVY1Qk1UQTFaVEV4/TTJJdFkyRmhZeTAw/TUdZd0xUazFNR010/Tm1FeE5XTTFZV0pp/Wm1JNFhrRXlYa0Zx/Y0djQC5qcGc",
+    movieName: "Kadhal Reset Repeat (2026)",
+    director: "A. L. Vijay",
+    starring: "Arjun Ashokan, Madumkesh Prem, Jiyaa Shankar",
+    genres: ["Comedy", "Drama", "Romantic"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "9.2/10",
+    lastUpdated: "08 April 2026",
+    links: [
+      { label: "Download 360p", url: "https://s25.cdnserver03.xyz/Moviesda.Mobi_-_Kadhal_Reset_Repeat_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s02.cdnserver01.xyz/Moviesda.Mobi_-_Kadhal_Reset_Repeat_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s11.cdnserver02.xyz/Moviesda.Mobi_-_Kadhal_Reset_Repeat_2026_Original_1080p_HD_(3.6_GB).mp4", className: "p1080" },
+    ],
+    watchUrl: "https://s24.cdnserver03.xyz/Moviesda.Mobi_-_Kadhal_Reset_Repeat_2026_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Seetha Payanam (2026)",
+    image: "https://imgs.search.brave.com/sVAzLTwb4VQLP03g-Uq_IXxEEfYzRA4oN01o5vEMJIA/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9zdW5k/LWltYWdlcy5zdW5u/eHQuY29tLzI0NjQ1/NC8yNTB4Mzc1X1Nl/ZXRoYVBheWFuYW1U/YW1pbF8yNDY0NTRf/MGFiYzg0MGQtZDA2/Yi00Y2NhLWExZWIt/NDFhMTNlZDU2YWE4/LmpwZw",
+    movieName: "Seetha Payanam (2026)",
+    director: "Arjun Sarja",
+    starring: "Niranjan Sudhindra, Aishwarya Arjun, Dhruva Sarja",
+    genres: ["Drama", "Family"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "6.3/10",
+    lastUpdated: "19 March 2026",
+    links: [
+      { label: "Download 360p", url: "https://dl3.biggshare.xyz/Moviesda.Mobi_-_Seetha_Payanam_2026_Original_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s10.hotshare.link/Moviesda.Mobi_-_Seetha_Payanam_2026_Original_720p_HD.mp4", className: "p720" },
+      { label: "Download 1080p", url: "https://s07.hotshare.link/Moviesda.Mobi_-_Seetha_Payanam_2026_Original_1080p_HD__3.5_GB_.mp4", className: "p1080" },
+    ],
+    watchUrl: "https://s02.hotshare.link/Moviesda.Mobi_-_Seetha_Payanam_2026_Original_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Jana Nayagan Audio Launch (2026)",
+    image: "https://imgs.search.brave.com/PmvpV2rPjnC24asklNu8aEDre6acctmDXzmTH04z7hc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tLm1l/ZGlhLWFtYXpvbi5j/b20vaW1hZ2VzL00v/TVY1Qk9URTFNMlpr/WmpZdE56RXhOaTAw/TVRRd0xUZzNaRFl0/WVRBM1ltUXlNRGd5/WmpVNFhrRXlYa0Zx/Y0djQC5qcGc",
+    movieName: "Jana Nayagan Audio Launch (2026)",
+    director: "H. Vinoth",
+    starring: "Vijay, Bobby Deol, Pooja Hegde",
+    genres: ["Action", "Drama", "Political"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "10/10",
+    lastUpdated: "04 January 2026",
+    links: [
+      { label: "Download 480p", url: "https://dl9.biggshare.xyz/Moviesda.Mobi_-_Jana_Nayagan_Audio_Launch_2026_HDRip_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://s01.hotshare.link/Moviesda.Mobi_-_Jana_Nayagan_Audio_Launch_2026_HDRip_720p_HD.mp4", className: "p720" }
+    ],
+    watchUrl: "https://s09.hotshare.link/Moviesda.Mobi_-_Jana_Nayagan_Audio_Launch_2026_HDRip_720p_HD.mp4?stream=1"
+  },
+  {
+    title: "Parasakthi Audio Launch (2026)",
+    image: "https://imgs.search.brave.com/h7NZ5a0U7gl2SdouE6FwIYRJt64P_2fjo04FkrfmPug/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9jZG4u/ZGlzdHJpY3QuaW4v/bW92aWVzLWFzc2V0/cy9pbWFnZXMvY2lu/ZW1hL1BhcmFhMS1t/aW4tMjNjY2RjNjAt/ZWJiZC0xMWYwLTk0/MGYtZjFkODZjMjRh/M2MxLmpwZz9pbT1S/ZXNpemUsd2lkdGg9/MzIw",
+    movieName: "Parasakthi Audio Launch (2026)",
+    director: "Sudha Kongara Prasad",
+    starring: "Sivakarthikeyan, Sree Leela, Jayam Ravi, Atharvaa",
+    genres: ["Action", "Drama", "Period", "Political"],
+    quality: "Original HD",
+    language: "Tamil",
+    rating: "7.9/10",
+    lastUpdated: "07 February 2026",
+    links: [
+      { label: "Download 360p", url: "https://dl7.biggshare.xyz/Moviesda.Mobi_-_Parasakthi_Audio_Launch_2026_Full_Show_360p_HD.mp4", className: "p480" },
+      { label: "Download 720p", url: "https://dl5.biggshare.xyz/Moviesda.Mobi_-_Parasakthi_Audio_Launch_2026_Full_Show_720p_HD.mp4", className: "p720" }
+    ],
+    watchUrl: "https://dl5.biggshare.xyz/Moviesda.Mobi_-_Parasakthi_Audio_Launch_2026_Full_Show_720p_HD.mp4?stream=1"
+  },
+];

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You Are Offline - MovieMachi</title>
+  <link rel="icon" type="image/png" href="/moviemachi_logo.png" />
+  <link rel="shortcut icon" type="image/png" href="/moviemachi_logo.png" />
+  <link rel="apple-touch-icon" href="/moviemachi_logo.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              red: '#e50914',
+              hoverRed: '#b80710',
+              blue: '#00d2ff',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Keyframes & Anim base */
+    @keyframes float {
+      0% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-15px) rotate(2deg); }
+      100% { transform: translateY(0px) rotate(0deg); }
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.5; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+      100% { transform: scale(0.95); opacity: 0.5; }
+    }
+    @keyframes glow-red {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(5%, 10%) scale(1.15); }
+      100% { transform: translate(0, 0) scale(1); }
+    }
+    @keyframes glow-blue {
+      0% { transform: translate(0, 0) scale(1.1); }
+      50% { transform: translate(-8%, -5%) scale(0.9); }
+      100% { transform: translate(0, 0) scale(1.1); }
+    }
+    .float-anim {
+      animation: float 5s ease-in-out infinite;
+    }
+    .pulse-glow-red {
+      animation: glow-red 16s ease-in-out infinite;
+    }
+    .pulse-glow-blue {
+      animation: glow-blue 20s ease-in-out infinite;
+    }
+    .offline-bullet {
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
+    }
+    .online-bullet {
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.7);
+    }
+    /* Smart TV Focus Indicators */
+    .tv-focused {
+      outline: none !important;
+      border-color: #e50914 !important;
+      background-color: rgba(229, 9, 20, 0.15) !important;
+      box-shadow: 0 0 20px rgba(229, 9, 20, 0.8) !important;
+      transform: scale(1.04);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    /* Hide scrollbar for settings */
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-[#030307] text-gray-100 flex flex-col justify-between min-h-screen relative overflow-hidden select-none font-sans">
+
+  <!-- Ambient Cinematic Background Glows -->
+  <div class="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+    <!-- Red ambient neon light -->
+    <div class="absolute top-1/4 -left-1/4 w-[400px] sm:w-[550px] h-[400px] sm:h-[550px] rounded-full bg-brand-red/10 blur-[120px] pulse-glow-red"></div>
+    <!-- Blue ambient neon light -->
+    <div class="absolute bottom-1/4 -right-1/4 w-[420px] sm:w-[600px] h-[420px] sm:h-[600px] rounded-full bg-brand-blue/10 blur-[130px] pulse-glow-blue"></div>
+  </div>
+
+  <!-- Header Banner / Connection Status Toast -->
+  <header class="w-full max-w-7xl mx-auto px-6 py-6 z-10 flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+      <!-- Official MovieMachi Brand Logo -->
+      <img src="/moviemachi_logo.png" alt="MovieMachi Logo" class="w-9 h-9 rounded-xl object-cover shadow-lg shadow-brand-red/20 border border-brand-red/30" referrerpolicy="no-referrer" />
+      <span class="font-extrabold text-lg uppercase tracking-wider text-white">Movie<span class="text-brand-red">Machi</span></span>
+    </div>
+
+    <!-- Active Connection pill status indicator -->
+    <div id="status-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-semibold backdrop-blur-md transition-colors duration-300">
+      <span id="status-indicator-dot" class="w-2.5 h-2.5 rounded-full bg-red-500 offline-bullet animate-pulse"></span>
+      <span id="status-text" class="text-gray-300 font-mono tracking-tight">🔴 OFFLINE</span>
+    </div>
+  </header>
+
+  <!-- Main Offline Panel -->
+  <main class="flex-1 w-full max-w-7xl mx-auto px-4 py-8 flex flex-col justify-center items-center z-10">
+    <!-- Connection alert flash overlay -->
+    <div id="toast-banner" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-[#0d2a1c] border border-green-500/30 text-green-400 px-6 py-3 rounded-2xl flex items-center gap-2.5 shadow-2xl backdrop-blur-xl scale-95 opacity-0 transition-all duration-500">
+      <svg class="w-5 h-5 text-green-400 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span class="font-bold text-sm tracking-wide">Connection Restored! Reloading MovieMachi...</span>
+    </div>
+
+    <!-- Premium Glassmorphism main Card -->
+    <div id="main-content-card" class="w-full max-w-lg bg-white/[0.03] border border-white/5 rounded-3xl p-6 sm:p-10 text-center shadow-[0_24px_50px_-12px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-300 relative group overflow-hidden">
+      
+      <!-- Film decor overlay lines -->
+      <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-brand-red to-transparent opacity-60"></div>
+
+      <!-- Icon Section -->
+      <div class="flex justify-center mb-8 relative">
+        <!-- Pulse light base -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 bg-brand-red/10 rounded-full blur-xl animate-pulse"></div>
+        <!-- WiFi Off SVG (Floating Animation) -->
+        <div class="w-24 h-24 rounded-2xl bg-gradient-to-tr from-white/2 to-white/5 border border-white/10 flex items-center justify-center float-anim shadow-inner">
+          <svg class="w-12 h-12 text-brand-red/95 drop-shadow-[0_0_12px_rgba(229,9,20,0.4)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+            <!-- Slash line representing off state -->
+            <path stroke-linecap="round" stroke-linejoin="round" d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.5M5 12.5a10.94 10.94 0 015.83-2.84M8.54 16A4.48 4.48 0 0110 15.3M14 15.3a4.48 4.48 0 011.46.7M12 20h.01" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Text Header -->
+      <div class="space-y-3 mb-8">
+        <h1 class="font-black text-3xl sm:text-4xl text-white tracking-tight uppercase">You Are Offline</h1>
+        <h2 class="text-brand-red font-bold text-sm tracking-widest uppercase font-mono">We can't reach our servers right now.</h2>
+        <p class="text-sm text-gray-400 max-w-sm mx-auto leading-relaxed">
+          Please check your internet connection, WiFi, or mobile data and try again.
+        </p>
+      </div>
+
+      <!-- Action Buttons Grid -->
+      <div class="flex flex-col gap-3 justify-center items-stretch max-w-xs mx-auto">
+        <!-- 1. Check Connection Button -->
+        <button id="btn-check" class="tabable-btn relative group overflow-hidden px-5 py-4.5 rounded-2xl bg-brand-red text-white font-bold text-sm flex items-center justify-center gap-2.5 transition-all shadow-[0_4px_16px_rgba(229,9,20,0.3)] hover:brightness-110 active:scale-98 cursor-pointer border border-brand-red/25">
+          <span id="btn-check-icon">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </span>
+          <span id="btn-check-loading-icon" class="hidden">
+            <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </span>
+          <span id="btn-check-text">Check Connection</span>
+        </button>
+
+        <!-- 2. Open Network Settings -->
+        <button id="btn-settings" class="tabable-btn px-5 py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-gray-300 font-semibold text-sm flex items-center justify-center gap-2.5 border border-white/5 transition-all active:scale-98 cursor-pointer">
+          <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span>Network Settings</span>
+        </button>
+
+        <!-- 3. Retry Page Reload -->
+        <button id="btn-retry" class="tabable-btn px-5 py-3.5 rounded-2xl bg-transparent hover:bg-white/[0.02] text-xs font-bold text-gray-400 hover:text-white transition-all cursor-pointer">
+          Reload Website (Retry)
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Instructions Overlay Modal -->
+    <div id="instructions-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000000e3] backdrop-blur-xl scale-0 opacity-0 transition-all duration-300">
+      <div class="bg-[#0b0b14] border border-white/10 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-6 shadow-2xl relative text-left">
+        <button id="btn-close-modal" class="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white cursor-pointer transition-colors" title="Close">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+
+        <div>
+          <h3 class="font-extrabold text-xl text-white">Open Network Settings</h3>
+          <p class="text-xs text-gray-400 mt-1">Please select your device platform below:</p>
+        </div>
+
+        <!-- Devices Tab Selector -->
+        <div class="flex border-b border-white/5 gap-2 overflow-x-auto scrollbar-none pb-1">
+          <button onclick="switchTab('tab-android')" class="tab-pill px-3 py-2 text-xs font-bold rounded-xl whitespace-nowrap bg-brand-red text-white transition-colors cursor-pointer" id="tab-pill-android">🤖 Android</button>
+          <button onclick="switchTab('tab-ios')" class="tab-pill px-3 py-2 text-xs font-bold rounded-xl whitespace-nowrap bg-white/5 text-gray-300 hover:bg-white/10 transition-colors cursor-pointer" id="tab-pill-ios">📱 iPhone / iOS</button>
+          <button onclick="switchTab('tab-tv')" class="tab-pill px-3 py-2 text-xs font-bold rounded-xl whitespace-nowrap bg-white/5 text-gray-300 hover:bg-white/10 transition-colors cursor-pointer" id="tab-pill-tv">📺 Smart TV</button>
+          <button onclick="switchTab('tab-desktop')" class="tab-pill px-3 py-2 text-xs font-bold rounded-xl whitespace-nowrap bg-white/5 text-gray-300 hover:bg-white/10 transition-colors cursor-pointer" id="tab-pill-desktop">💻 PC / macOS</button>
+        </div>
+
+        <!-- Instructions Content -->
+        <div class="space-y-4 text-sm text-gray-300 min-h-[140px]">
+          <!-- Android -->
+          <div id="tab-android" class="platform-tab space-y-3">
+            <p>Android devices support automated WiFi opening shortcuts. Tap below to launch:</p>
+            <button onclick="launchAndroidWifi()" class="w-full py-2.5 rounded-xl bg-brand-red hover:bg-brand-hoverRed text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-lg shadow-brand-red/10">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+              Launch System WiFi Settings
+            </button>
+            <p class="text-xs text-gray-500 mt-2 font-mono">Manual Route: Settings &rarr; Connections / Network &rarr; Wi-Fi</p>
+          </div>
+
+          <!-- iOS -->
+          <div id="tab-ios" class="platform-tab hidden space-y-2">
+            <h4 class="font-bold text-white text-xs text-brand-red uppercase font-mono tracking-widest">iOS / Apple Steps:</h4>
+            <ul class="list-decimal list-inside space-y-1 text-xs leading-relaxed text-gray-400">
+              <li>Open your home screen and open the <span class="text-white font-medium">Settings App ⚙️</span>.</li>
+              <li>Tap on <span class="text-white font-medium">Wi-Fi</span> or <span class="text-white font-medium">Cellular Data</span>.</li>
+              <li>Ensure the toggle is swiped to <span class="text-brand-blue font-bold">ON</span>.</li>
+              <li>Connect to your network router or verify cellular signals.</li>
+            </ul>
+          </div>
+
+          <!-- Smart TV -->
+          <div id="tab-tv" class="platform-tab hidden space-y-2">
+            <h4 class="font-bold text-white text-xs text-brand-red uppercase font-mono tracking-widest">Smart TV & Remote Control:</h4>
+            <ul class="list-decimal list-inside space-y-1 text-xs leading-relaxed text-gray-400">
+              <li>Press the physical <span class="text-white font-medium">Menu (or Home)</span> button on your TV Remote.</li>
+              <li>Navigate down to <span class="text-white font-medium">Settings</span> / Control Panel.</li>
+              <li>Choose <span class="text-white font-medium">Network / Wifi Settings</span>.</li>
+              <li>Select <span class="text-white font-medium">Set up connection</span> and input router passcode.</li>
+            </ul>
+          </div>
+
+          <!-- Desktop -->
+          <div id="tab-desktop" class="platform-tab hidden space-y-2">
+            <h4 class="font-bold text-white text-xs text-brand-red uppercase font-mono tracking-widest">Windows & MacOS Systems:</h4>
+            <ul class="list-decimal list-inside space-y-1 text-xs leading-relaxed text-gray-400">
+              <li>Check your device taskbar (bottom right on Windows) or top menubar (on Mac).</li>
+              <li>Click on the <span class="text-white font-medium">Wi-Fi icon 📶</span>.</li>
+              <li>Toggle it OFF, wait 5 seconds, and toggle it back <span class="text-brand-blue font-bold">ON</span>.</li>
+              <li>Ensure you've authenticated with portal wifi if playing in cafe/hotel networks.</li>
+            </ul>
+          </div>
+        </div>
+
+        <button id="btn-modal-dismiss" class="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 font-bold text-xs text-gray-300 hover:text-white transition-colors cursor-pointer uppercase tracking-wider border border-white/5">
+          Go Back
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Responsive Movie Footer Info -->
+  <footer class="w-full max-w-7xl mx-auto px-6 py-8 z-10 text-center border-t border-white/5 mt-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+    <p class="text-xs text-gray-500 font-mono tracking-tight">
+      &copy; 2026 MovieMachi • Premium Server Redundancy Active.
+    </p>
+    <div class="flex items-center gap-4 text-[11px] font-bold text-gray-400">
+      <span class="cursor-pointer hover:text-brand-red transition-colors">Offline Guide</span>
+      <span class="text-gray-700 font-normal select-none">|</span>
+      <span class="cursor-pointer hover:text-brand-red transition-colors">Help &amp; Queries</span>
+      <span class="text-gray-700 font-normal select-none">|</span>
+      <span class="cursor-pointer hover:text-brand-red transition-colors">Local Mirror v2.4</span>
+    </div>
+  </footer>
+
+  <!-- App logic & events script -->
+  <script>
+    const btnCheck = document.getElementById('btn-check');
+    const btnSettings = document.getElementById('btn-settings');
+    const btnRetry = document.getElementById('btn-retry');
+    const btnCloseModal = document.getElementById('btn-close-modal');
+    const btnModalDismiss = document.getElementById('btn-modal-dismiss');
+    
+    const btnCheckIcon = document.getElementById('btn-check-icon');
+    const btnCheckLoadingIcon = document.getElementById('btn-check-loading-icon');
+    const btnCheckText = document.getElementById('btn-check-text');
+    
+    const instructionsModal = document.getElementById('instructions-modal');
+    const statusIndicatorDot = document.getElementById('status-indicator-dot');
+    const statusText = document.getElementById('status-text');
+    const statusBadge = document.getElementById('status-badge');
+    const toastBanner = document.getElementById('toast-banner');
+
+    // TV Controller Index State
+    const tvSelectables = Array.from(document.querySelectorAll('.tabable-btn'));
+    let tvFocusedIndex = 0;
+
+    // Detect browser online/offline API triggers
+    window.addEventListener('online', updateState);
+    window.addEventListener('offline', updateState);
+
+    function updateState() {
+      const isOnline = navigator.onLine;
+      if (isOnline) {
+        statusIndicatorDot.className = 'w-2.5 h-2.5 rounded-full bg-green-500 online-bullet';
+        statusText.innerText = '🟢 ONLINE';
+        statusBadge.className = 'flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-950/20 border border-green-500/20 text-xs font-semibold backdrop-blur-md text-green-400';
+        
+        // Show success connection restored toast
+        toastBanner.style.opacity = '1';
+        toastBanner.style.transform = 'translate(-50%, 0) scale(1.05)';
+
+        // Automate reload after a short delay
+        setTimeout(() => {
+          window.location.reload();
+        }, 1800);
+      } else {
+        statusIndicatorDot.className = 'w-2.5 h-2.5 rounded-full bg-red-500 offline-bullet animate-pulse';
+        statusText.innerText = '🔴 OFFLINE';
+        statusBadge.className = 'flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-semibold backdrop-blur-md text-gray-300';
+        toastBanner.style.opacity = '0';
+        toastBanner.style.transform = 'translate(-50%, 0) scale(0.95)';
+      }
+    }
+
+    // Call updateState initially
+    updateState();
+
+    // Check Connection operation
+    if (btnCheck) {
+      btnCheck.addEventListener('click', () => {
+        // Show loader
+        btnCheckIcon.classList.add('hidden');
+        btnCheckLoadingIcon.classList.remove('hidden');
+        btnCheckText.innerText = 'Verifying Connection...';
+        btnCheck.disabled = true;
+
+        // Perform connection request with high timeout fallback
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+        // Simple ping test
+        fetch('/', { method: 'HEAD', cache: 'no-store', signal: controller.signal })
+          .then(() => {
+            clearTimeout(timeoutId);
+            // Successfully connected! Show nice restored screen
+            statusIndicatorDot.className = 'w-2.5 h-2.5 rounded-full bg-green-500 online-bullet';
+            statusText.innerText = '🟢 ONLINE';
+            statusBadge.className = 'flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-950/20 border border-green-500/20 text-xs font-semibold backdrop-blur-md text-green-400';
+            toastBanner.style.opacity = '1';
+            toastBanner.style.transform = 'translate(-50%, 0) scale(1.05)';
+
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          })
+          .catch(() => {
+            clearTimeout(timeoutId);
+            // Failed connection indicator bump
+            setTimeout(() => {
+              btnCheckIcon.classList.remove('hidden');
+              btnCheckLoadingIcon.classList.add('hidden');
+              btnCheckText.innerText = 'Check Connection';
+              btnCheck.disabled = false;
+              
+              // Simple vibration effect if supported
+              if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+              
+              // Gently pulse background red blob on fail
+              const card = document.getElementById('main-content-card');
+              card.style.transform = 'translateY(-4px)';
+              card.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+              setTimeout(() => {
+                card.style.transform = '';
+                card.style.borderColor = '';
+              }, 400);
+            }, 800);
+          });
+      });
+    }
+
+    // Modal Operations
+    if (btnSettings) {
+      btnSettings.addEventListener('click', () => {
+        instructionsModal.classList.remove('scale-0', 'opacity-0');
+        instructionsModal.classList.add('scale-100', 'opacity-100');
+      });
+    }
+
+    const dismissModal = () => {
+      instructionsModal.classList.add('scale-0', 'opacity-0');
+      instructionsModal.classList.remove('scale-100', 'opacity-100');
+    };
+
+    if (closeModal = btnCloseModal) closeModal.addEventListener('click', dismissModal);
+    if (dismiss = btnModalDismiss) dismiss.addEventListener('click', dismissModal);
+
+    // Tab Switching Logic inside Modal
+    window.switchTab = function(tabId) {
+      // Hide all tabs
+      document.querySelectorAll('.platform-tab').forEach(el => el.classList.add('hidden'));
+      // Show active
+      document.getElementById(tabId).classList.remove('hidden');
+
+      // Update pill classes
+      document.querySelectorAll('.tab-pill').forEach(el => {
+        el.className = 'tab-pill px-3 py-2 text-xs font-bold rounded-xl whitespace-nowrap bg-white/5 text-gray-300 hover:bg-white/10 transition-colors cursor-pointer';
+      });
+
+      // Highlight target active pill
+      const mapping = {
+        'tab-android': 'tab-pill-android',
+        'tab-ios': 'tab-pill-ios',
+        'tab-tv': 'tab-pill-tv',
+        'tab-desktop': 'tab-pill-desktop'
+      };
+      const activePill = document.getElementById(mapping[tabId]);
+      if (activePill) {
+        activePill.className = 'tab-pill px-3 py-2 text-xs font-bold rounded-xl whitespace-nowrap bg-brand-red text-white transition-colors cursor-pointer';
+      }
+    };
+
+    // Android Direct Launch Intent Wrapper
+    window.launchAndroidWifi = function() {
+      // Intent redirect to WiFi system panel
+      window.location.href = "intent:#Intent;action=android.settings.WIFI_SETTINGS;end";
+      
+      // Fallback popup hint if the webview restricts direct intent routes
+      setTimeout(() => {
+        alert("Directing to Settings... If settings didn't load automagically, please open Android Device Settings manually.");
+      }, 500);
+    };
+
+    // Retry Page reload helper
+    if (btnRetry) {
+      btnRetry.addEventListener('click', () => {
+        window.location.reload();
+      });
+    }
+
+    // Smart TV Remote Controller Direction Assist (Arrow keys, Enter map)
+    function styleTvFocused(elIndex) {
+      tvSelectables.forEach((btn, ind) => {
+        if (ind === elIndex) {
+          btn.classList.add('tv-focused');
+        } else {
+          btn.classList.remove('tv-focused');
+        }
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      // Handle navigation inside main cards
+      if (['ArrowUp', 'ArrowDown', 'Enter'].includes(e.key)) {
+        // Skip default remote scroll
+        e.preventDefault();
+      }
+
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        tvFocusedIndex = (tvFocusedIndex - 1 + tvSelectables.length) % tvSelectables.length;
+        styleTvFocused(tvFocusedIndex);
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        tvFocusedIndex = (tvFocusedIndex + 1) % tvSelectables.length;
+        styleTvFocused(tvFocusedIndex);
+      } else if (e.key === 'Enter') {
+        // Trigger select target
+        if (tvSelectables[tvFocusedIndex]) {
+          tvSelectables[tvFocusedIndex].click();
+        }
+      }
+    });
+
+    // Tap setup on desktop initial focus index
+    styleTvFocused(tvFocusedIndex);
+  </script>
+</body>
+</html>

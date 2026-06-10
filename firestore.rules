@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Movies collection rules
+    match /movies/{movieId} {
+      // General viewers can query and browse the catalog
+      allow read: if true;
+      // Admin client performs writes, updates, and deletes
+      allow write: if true;
+    }
+  }
+}
