@@ -16,6 +16,17 @@ interface HeaderProps {
   onPlayMovieTitle: (title: string) => void;
 }
 
+function formatNotifTime(createdAt: number): string {
+  if (!createdAt) return "Just now";
+  const diffMs = Date.now() - createdAt;
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return new Date(createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 export default function Header({ 
   searchQuery, 
   onSearchChange, 
@@ -32,6 +43,7 @@ export default function Header({
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
+  const sortedNotifications = [...notifications].sort((a, b) => b.createdAt - a.createdAt);
   return (
     <header className="sticky top-0 z-40 w-full transition-all duration-300">
       {/* Outer blurred glass panel */}
@@ -139,7 +151,17 @@ export default function Header({
             {/* Premium Actionable Notification Bell Component */}
             <div className="relative">
               <button
-                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                onClick={() => {
+                  const nextState = !isNotifOpen;
+                  setIsNotifOpen(nextState);
+                  if (nextState) {
+                    notifications.forEach((n) => {
+                      if (!n.isRead) {
+                        onMarkNotificationRead(n.id);
+                      }
+                    });
+                  }
+                }}
                 className={`p-2 ml-1 rounded-xl transition-all duration-300 flex items-center justify-center shrink-0 cursor-pointer active:scale-95 shadow-md border ${
                   isNotifOpen 
                     ? "bg-red-600/20 text-white border-red-500/40" 
@@ -174,7 +196,7 @@ export default function Header({
                   </div>
 
                   <div className="max-h-64 overflow-y-auto space-y-2.5 pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                    {notifications.length === 0 ? (
+                    {sortedNotifications.length === 0 ? (
                       <div className="py-8 flex flex-col items-center justify-center text-center gap-2">
                         <Inbox size={20} className="text-stone-600" />
                         <span className="text-[11px] font-sans text-stone-500 font-medium">
@@ -182,7 +204,7 @@ export default function Header({
                         </span>
                       </div>
                     ) : (
-                      notifications.map((notif) => (
+                      sortedNotifications.map((notif) => (
                         <div 
                           key={notif.id} 
                           className={`relative group p-2.5 rounded-xl border transition-all flex flex-col gap-1.5 ${
@@ -227,12 +249,18 @@ export default function Header({
                               </button>
                             </div>
                           </div>
-                          {!notif.isRead && (
-                            <div className="flex items-center gap-1">
-                              <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse shadow-sm" />
-                              <span className="text-[9px] font-mono text-red-400 font-semibold tracking-wider uppercase">Unread</span>
-                            </div>
-                          )}
+                          
+                          <div className="flex items-center justify-between mt-1 pt-1 border-t border-white/5">
+                            {!notif.isRead ? (
+                              <div className="flex items-center gap-1">
+                                <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse shadow-sm" />
+                                <span className="text-[9px] font-mono text-red-400 font-semibold tracking-wider uppercase">Unread</span>
+                              </div>
+                            ) : (
+                              <span className="text-[9px] font-mono text-stone-500 uppercase tracking-wider">Read</span>
+                            )}
+                            <span className="text-[9px] font-mono text-stone-500">{formatNotifTime(notif.createdAt)}</span>
+                          </div>
                         </div>
                       ))
                     )}

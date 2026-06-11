@@ -1927,6 +1927,11 @@ export default function RequestSection({
                                   <Clock size={9} />
                                   <span>{r.timeAgo}</span>
                                 </span>
+                                {r.requesterUsername && (
+                                  <span className="text-[9px] text-[#ff6b00] font-black font-mono">
+                                    • {r.requesterUsername}
+                                  </span>
+                                )}
                               </div>
 
                               <div className="shrink-0">
@@ -2010,7 +2015,7 @@ export default function RequestSection({
                     <form 
                       onSubmit={(e) => {
                         e.preventDefault();
-                        if (adminUsernameInput.trim() === "25226040" && adminPasswordInput === "DEEPAK@2007") {
+                        if (adminUsernameInput.trim() === "admin" && adminPasswordInput === "moviemachi2026") {
                           setIsAdminLoggedIn(true);
                           setAdminLoginError("");
                           setAdminPasswordInput("");

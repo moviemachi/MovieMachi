@@ -17,7 +17,7 @@ import {
   markNotificationAsReadInFirestore,
   deleteNotificationFromFirestore
 } from "./lib/firebase";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where, deleteDoc, doc } from "firebase/firestore";
 import BackgroundAurora from "./components/BackgroundAurora";
 import Header from "./components/Header";
 import ContinueWatching from "./components/ContinueWatching";
@@ -271,6 +271,29 @@ export default function App() {
     }
   }, [notifications]);
 
+  // Automatic request board cleanup: uploaded requests deleted 24 hours later
+  useEffect(() => {
+    if (requests.length === 0) return;
+    const now = Date.now();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    const expired = requests.filter(r => {
+      if (r.status !== "Uploaded") return false;
+      const uploadedTime = r.uploadedAt || r.createdAt;
+      return (now - uploadedTime) > oneDayMs;
+    });
+
+    if (expired.length > 0) {
+      expired.forEach(async (r) => {
+        try {
+          await deleteDoc(doc(db, "requests", r.id));
+          console.log(`[Auto-Cleanup] Successfully cleared request metadata for "${r.movieName}".`);
+        } catch (err) {
+          console.error("Error running auto-cleanup on request:", err);
+        }
+      });
+    }
+  }, [requests]);
+
   // Notification interactions and actions
   const handleMarkNotificationRead = async (id: string) => {
     try {
@@ -352,8 +375,8 @@ export default function App() {
 
     // check if it exists in movie catalog
     const movieExists = movies.some(
-      m => (m.movieName || "").toLowerCase() === formattedMovieName.toLowerCase() ||
-           (m.title || "").toLowerCase() === movieLookupTitle.toLowerCase()
+      m => m.movieName.toLowerCase() === formattedMovieName.toLowerCase() ||
+           m.title.toLowerCase() === movieLookupTitle.toLowerCase()
     );
 
     if (movieExists) {
@@ -362,7 +385,7 @@ export default function App() {
 
     // check duplicate in request ledger
     const existingReqIdx = requests.findIndex(
-      r => (r.movieName || "").toLowerCase() === formattedMovieName.toLowerCase() &&
+      r => r.movieName.toLowerCase() === formattedMovieName.toLowerCase() &&
            r.year === formattedYear
     );
 
@@ -604,6 +627,16 @@ export default function App() {
       const newestMovie = sorted[0];
       if (!newestMovie) return;
 
+      // Only notify if this movie was requested/voted by this user in requests list
+      const isRequestedByMe = requests.some(r => 
+        r.requesters.includes(userId) && (
+          r.movieName.toLowerCase() === newestMovie.movieName.toLowerCase() ||
+          newestMovie.title.toLowerCase().includes(r.movieName.toLowerCase()) ||
+          r.movieName.toLowerCase().includes(newestMovie.movieName.toLowerCase())
+        )
+      );
+      if (!isRequestedByMe) return;
+
       const lastNotifiedTitle = localStorage.getItem("moviemachi_last_notified");
       // Notify the user only about the new movie once
       if (lastNotifiedTitle !== newestMovie.title) {
@@ -707,13 +740,13 @@ export default function App() {
       clearTimeout(delayTimer);
       navigator.serviceWorker?.removeEventListener("message", handleServiceWorkerMessage);
     };
-  }, []);
+  }, [movies, requests, userId]);
 
   // Players and Modals
   const [activePlayerMovie, setActivePlayerMovie] = useState<Movie | null>(null);
   const [activeDownloadMovie, setActiveDownloadMovie] = useState<Movie | null>(null);
   const [activeTrailerMovie, setActiveTrailerMovie] = useState<Movie | null>(null);
-  const [selectedSeries, setSelectedSeries] = useState<Series | Movie | null>(null);
+  const [selectedSeries, setSelectedSeries] = useState<Series | null>(null);
 
   const handlePlayEpisode = (seriesItem: Series, episodeNum: number) => {
     const episodeObj = seriesItem.episodes?.find(ep => (ep.episodeNumber === episodeNum || ep.episode === episodeNum));
@@ -1231,7 +1264,7 @@ export default function App() {
                               <button 
                                 onClick={() => {
                                   handleSlideInteraction();
-                                  setSelectedSeries(slide);
+                                  setActiveDownloadMovie(slide);
                                 }}
                                 className={`h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-white/5 hover:bg-white/10 text-gray-200 font-display font-bold text-[9px] xs:text-[11px] sm:text-sm border border-white/10 flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer ${
                                   !hasWatchUrl ? "shadow-[0_0_20px_rgba(239,68,68,0.25)] bg-red-650 hover:bg-red-550 border border-red-500/20 text-white" : ""
@@ -1404,7 +1437,7 @@ export default function App() {
                           key={`${movie.title}-${movieIdx}`}
                           movie={movie as Movie}
                           onWatch={setActivePlayerMovie}
-                          onDownload={setSelectedSeries}
+                          onDownload={setActiveDownloadMovie}
                           isFavorite={watchlist.includes(movie.title)}
                           onToggleFavorite={handleToggleWatchlist}
                           onPlayTrailer={setActiveTrailerMovie}
@@ -1674,7 +1707,7 @@ export default function App() {
                             key={`${movie.title}-${movieIdx}`}
                             movie={movie as Movie}
                             onWatch={setActivePlayerMovie}
-                            onDownload={setSelectedSeries}
+                            onDownload={setActiveDownloadMovie}
                             isFavorite={watchlist.includes(movie.title)}
                             onToggleFavorite={handleToggleWatchlist}
                             onPlayTrailer={setActiveTrailerMovie}
@@ -1873,7 +1906,6 @@ export default function App() {
           onClose={() => setSelectedSeries(null)}
           onPlayEpisode={handlePlayEpisode}
           onDownloadEpisode={handleDownloadEpisode}
-          onWatchMovie={setActivePlayerMovie}
         />
       )}
 
@@ -1916,10 +1948,9 @@ export default function App() {
                 {activeDownloadMovie.links && activeDownloadMovie.links.length > 0 ? (
                   activeDownloadMovie.links.map((link, idx) => {
                     // Match visual styles
-                    const labelStr = link.label || "";
-                    const is4k = link.className === "K4" || labelStr.toLowerCase().includes("4k");
-                    const is1080 = link.className === "p1080" || labelStr.toLowerCase().includes("1080p");
-                    const is720 = link.className === "p720" || labelStr.toLowerCase().includes("720p");
+                    const is4k = link.className === "K4" || link.label.toLowerCase().includes("4k");
+                    const is1080 = link.className === "p1080" || link.label.toLocaleLowerCase().includes("1080p");
+                    const is720 = link.className === "p720" || link.label.toLowerCase().includes("720p");
 
                     return (
                       <a

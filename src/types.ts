@@ -62,6 +62,10 @@ export interface CommunityRequest {
   requestCount: number;
   timeAgo: string;
   createdAt: number;
+  requesterUserId?: string;
+  requesterUsername?: string;
+  requestedMovieName?: string;
+  uploadedAt?: number;
 }
 
 export interface AppNotification {
