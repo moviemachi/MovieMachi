@@ -9,6 +9,26 @@ import {
 import { Movie, MovieLink, CommunityRequest, Series, SeriesEpisode } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 
+export function formatTimeAgo(createdAt: number): string {
+  if (!createdAt) return "Just now";
+  const diffMs = Date.now() - createdAt;
+  if (diffMs < 0) return "Just now";
+  const seconds = Math.floor(diffMs / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (seconds < 60) {
+    return "Just now";
+  } else if (minutes < 60) {
+    return minutes === 1 ? "1 minute ago" : `${minutes} minutes ago`;
+  } else if (hours < 24) {
+    return hours === 1 ? "1 hour ago" : `${hours} hours ago`;
+  } else {
+    return days === 1 ? "1 day ago" : `${days} days ago`;
+  }
+}
+
 interface RequestSectionProps {
   movies: Movie[];
   requests: CommunityRequest[];
@@ -299,8 +319,10 @@ export default function RequestSection({
     }, 6000);
   };
 
-  // Filter lists - Ledger becomes a shared public request board showing ALL regardless of status, sorted by highest votes!
-  const publicLedgerRequests = [...requests].sort((a, b) => b.requestCount - a.requestCount);
+  // Filter lists - Ledger becomes a shared public request board showing ALL regardless of status, sorted by newest first!
+  const publicLedgerRequests = [...requests].sort((a, b) => {
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
   const myRequests = requests.filter(r => r.requesters.includes(userId));
 
   const resetCmsForm = () => {
@@ -1343,7 +1365,7 @@ export default function RequestSection({
                       <span>•</span>
                       <span>{r.quality.split(" ")[0]}</span>
                       <span>•</span>
-                      <span>{r.timeAgo}</span>
+                      <span>{formatTimeAgo(r.createdAt)}</span>
                     </div>
                     {r.comments && (
                       <p className="text-[10px] text-stone-500 font-medium italic truncate max-w-xs">💬 "{r.comments}"</p>
@@ -1925,7 +1947,7 @@ export default function RequestSection({
                                 
                                 <span className="text-[9px] text-stone-600 flex items-center gap-1">
                                   <Clock size={9} />
-                                  <span>{r.timeAgo}</span>
+                                  <span>{formatTimeAgo(r.createdAt)}</span>
                                 </span>
                                 {r.requesterUsername && (
                                   <span className="text-[9px] text-[#ff6b00] font-black font-mono">
@@ -2433,7 +2455,7 @@ export default function RequestSection({
                                   <span>•</span>
                                   <span>{r.quality.split(" ")[0]}</span>
                                   <span>•</span>
-                                  <span>{r.timeAgo}</span>
+                                  <span>{formatTimeAgo(r.createdAt)}</span>
                                 </div>
                                 {r.comments && (
                                   <p className="text-[10px] text-stone-500 font-medium italic truncate max-w-xs">💬 "{r.comments}"</p>

@@ -139,7 +139,7 @@ export function sanitizeMovieData(movie: any): Movie {
 }
 
 export function sanitizeRequestData(r: any): CommunityRequest {
-  return {
+  const result: any = {
     id: r.id || "",
     movieName: r.movieName || "",
     year: r.year || "",
@@ -154,9 +154,12 @@ export function sanitizeRequestData(r: any): CommunityRequest {
     createdAt: Number(r.createdAt) || Date.now(),
     requesterUserId: r.requesterUserId || "",
     requesterUsername: r.requesterUsername || "",
-    requestedMovieName: r.requestedMovieName || r.movieName || "",
-    uploadedAt: r.uploadedAt ? Number(r.uploadedAt) : undefined
+    requestedMovieName: r.requestedMovieName || r.movieName || ""
   };
+  if (r.uploadedAt !== undefined && r.uploadedAt !== null) {
+    result.uploadedAt = Number(r.uploadedAt);
+  }
+  return result as CommunityRequest;
 }
 
 export function sanitizeSeriesData(s: any): Series {

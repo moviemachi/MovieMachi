@@ -25,9 +25,13 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const lastSavedTimeRef = useRef<number>(0);
   const currentTimeRef = useRef<number>(0);
+  const isScrubbingRef = useRef(false);
+  const durationRef = useRef(0);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isScrubbing, setIsScrubbing] = useState(false);
+
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.85);
@@ -42,6 +46,10 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const [hoverX, setHoverX] = useState<number>(0);
+
+  useEffect(() => {
+    durationRef.current = duration;
+  }, [duration]);
 
   const [ambientLights, setAmbientLights] = useState<boolean>(() => {
     try {
@@ -163,6 +171,28 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
 
   const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
     if (!isMobile) return;
+    if (isScrubbingRef.current) return;
+    
+    // Prevent volume/brightness gestures on the progress bar
+    const target = e.target as HTMLElement;
+    if (target && progressBarRef.current && (progressBarRef.current.contains(target) || progressBarRef.current === target)) {
+      return;
+    }
+    const className = target?.className || "";
+    if (
+      typeof className === "string" && (
+        className.includes("progress") || 
+        className.includes("track") ||
+        className.includes("thumb") ||
+        className.includes("h-1") ||
+        className.includes("h-3") ||
+        className.includes("bg-white/10") ||
+        className.includes("bg-white/15")
+      )
+    ) {
+      return;
+    }
+
     handleUserInteraction();
     const touch = e.touches[0];
     const rect = e.currentTarget.getBoundingClientRect();
@@ -178,7 +208,9 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
   };
 
   const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
-    if (!isMobile || !touchStartRef.current.type) return;
+    if (!isMobile) return;
+    if (isScrubbingRef.current) return;
+    if (!touchStartRef.current.type) return;
     handleUserInteraction();
     const touch = e.touches[0];
     const diffY = touchStartRef.current.y - touch.clientY; // swiping up increases value
@@ -204,6 +236,11 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
 
   const handleTouchEnd = (e: TouchEvent<HTMLDivElement>) => {
     if (!isMobile) return;
+    if (isScrubbingRef.current) {
+      isScrubbingRef.current = false;
+      setIsScrubbing(false);
+      return;
+    }
     if (!touchStartRef.current.moved) {
       const now = Date.now();
       const last = lastTouchTapRef.current;
@@ -668,6 +705,94 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
     handleSeek(percentage * duration);
   };
 
+  const seekFromClientX = (clientX: number) => {
+    if (!progressBarRef.current || durationRef.current <= 0) return;
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const relX = clientX - rect.left;
+    const percentage = Math.max(0, Math.min(1, relX / rect.width));
+    handleSeek(percentage * durationRef.current);
+  };
+
+  const handleProgressBarMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    isScrubbingRef.current = true;
+    setIsScrubbing(true);
+    seekFromClientX(e.clientX);
+  };
+
+  const handleProgressBarTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+    isScrubbingRef.current = true;
+    setIsScrubbing(true);
+    if (e.touches.length > 0) {
+      seekFromClientX(e.touches[0].clientX);
+    }
+  };
+
+  const handleProgressBarTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+    if (isScrubbingRef.current && e.touches.length > 0) {
+      seekFromClientX(e.touches[0].clientX);
+    }
+  };
+
+  const handleProgressBarTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    isScrubbingRef.current = false;
+    setIsScrubbing(false);
+  };
+
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: globalThis.MouseEvent) => {
+      if (isScrubbingRef.current) {
+        seekFromClientX(e.clientX);
+      }
+    };
+    const handleGlobalMouseUp = () => {
+      if (isScrubbingRef.current) {
+        isScrubbingRef.current = false;
+        setIsScrubbing(false);
+      }
+    };
+
+    const handleGlobalTouchMove = (e: globalThis.TouchEvent) => {
+      if (isScrubbingRef.current && e.touches.length > 0) {
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+        seekFromClientX(e.touches[0].clientX);
+      }
+    };
+
+    const handleGlobalTouchEnd = () => {
+      if (isScrubbingRef.current) {
+        isScrubbingRef.current = false;
+        setIsScrubbing(false);
+      }
+    };
+
+    window.addEventListener("mousemove", handleGlobalMouseMove);
+    window.addEventListener("mouseup", handleGlobalMouseUp);
+    window.addEventListener("touchmove", handleGlobalTouchMove, { passive: false });
+    window.addEventListener("touchend", handleGlobalTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", handleGlobalTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener("mousemove", handleGlobalMouseMove);
+      window.removeEventListener("mouseup", handleGlobalMouseUp);
+      window.removeEventListener("touchmove", handleGlobalTouchMove);
+      window.removeEventListener("touchend", handleGlobalTouchEnd);
+      window.removeEventListener("touchcancel", handleGlobalTouchEnd);
+    };
+  }, []);
+
   // Accent Color Picker for ambient light effect
   useEffect(() => {
     if (!ambientLights || !isPlaying || !videoRef.current) return;
@@ -760,7 +885,7 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
     if (!showStartPopup) return null;
     return (
       <div 
-        className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+        className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
         onTouchStart={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
@@ -1194,8 +1319,8 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
             </div>
           )}
 
-          {/* Custom Large Center Play Button Overlay (when paused) */}
-          {!isPlaying && !isLoading && !showStartPopup && (
+          {/* Custom Large Center Play Button Overlay (when paused - hidden on mobile) */}
+          {!isMobile && !isPlaying && !isLoading && !showStartPopup && (
             <div 
               onClick={togglePlay}
               className="absolute inset-0 z-20 flex items-center justify-center bg-black/35 cursor-pointer group hover:bg-black/25 transition-colors"
@@ -1212,78 +1337,219 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
           </AnimatePresence>
         </div>
 
-        {/* TOP BAR / HEADER (Slides down/up) */}
-        <AnimatePresence>
-          {controlsVisible && !showStartPopup && (
-            <motion.div
-              initial={{ translateY: -50, opacity: 0 }}
-              animate={{ translateY: 0, opacity: 1 }}
-              exit={{ translateY: -50, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="absolute top-0 left-0 right-0 z-30"
-              onClick={(e) => e.stopPropagation()}
+        {/* TOP BAR / HEADER */}
+        {isMobile ? (
+          <div 
+            className="absolute top-0 left-0 right-0 z-30 p-4 bg-gradient-to-b from-black via-black/85 to-transparent flex items-start justify-between gap-3 text-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="min-w-0 flex-1">
+              <h3 className="font-display font-bold text-sm text-white truncate leading-tight">
+                {isTrailer ? `🎬 Trailer | ${movie.movieName}` : movie.movieName}
+              </h3>
+              <p className="text-[10px] text-gray-400 mt-1 truncate">
+                Directed by {movie.director || "Not Specified"}
+              </p>
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <span className="text-[8px] font-mono font-black bg-[#ff2d55] text-white px-1.5 py-0.5 rounded uppercase tracking-wider shadow-[0_0_8px_rgba(255,45,85,0.4)] shrink-0">
+                  {movie.quality}
+                </span>
+                <span className="text-[9px] text-amber-500 font-bold font-mono">
+                  ★ {movie.rating || "9.5/10"}
+                </span>
+              </div>
+            </div>
+            
+            <button
+              onClick={handleClose}
+              className="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 border border-white/10 text-white cursor-pointer active:scale-95 transition-all shrink-0 shadow-lg hover:bg-[#ff2d55] hover:border-[#ff2d55]/40"
+              title="Close Player"
             >
-              {headerBarContent}
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <X size={18} />
+            </button>
+          </div>
+        ) : (
+          <AnimatePresence>
+            {controlsVisible && !showStartPopup && (
+              <motion.div
+                initial={{ translateY: -50, opacity: 0 }}
+                animate={{ translateY: 0, opacity: 1 }}
+                exit={{ translateY: -50, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="absolute top-0 left-0 right-0 z-30"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {headerBarContent}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
 
-        {/* BOTTOM GLASS OVERLAY CONTROL PANEL (Slides up/down) */}
-        <AnimatePresence>
-          {controlsVisible && !showStartPopup && (
-            <motion.div 
-              initial={{ translateY: 50, opacity: 0 }}
-              animate={{ translateY: 0, opacity: 1 }}
-              exit={{ translateY: 50, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-black/95 via-black/85 to-transparent z-35 select-none space-y-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Sleek Progress scrub timeline */}
-              <div className="flex items-center gap-3 w-full">
-                <span className="font-mono text-[10px] sm:text-xs text-gray-400 select-none shrink-0">{formatTime(currentTime)}</span>
-                
-                <div 
-                  ref={progressBarRef}
-                  onMouseMove={handleProgressBarMouseMove}
-                  onMouseLeave={handleProgressBarMouseLeave}
-                  onClick={handleProgressBarClick}
-                  className="relative flex-1 h-3 flex items-center cursor-pointer select-none group"
-                >
-                  {/* Hover timestamp tooltip */}
-                  {hoverTime !== null && (
-                    <div 
-                      className="absolute bottom-6 px-2 py-1 bg-[#09090f] border border-white/15 text-white text-[10px] font-mono font-bold rounded shadow-2xl -translate-x-1/2 pointer-events-none z-50 transform"
-                      style={{ left: `${hoverX}px` }}
-                    >
-                      {formatTime(hoverTime)}
+        {/* BOTTOM GLASS OVERLAY CONTROL PANEL / BOTTOM BAR */}
+        {isMobile ? (
+          <AnimatePresence>
+            {controlsVisible && !showStartPopup && (
+              <motion.div 
+                initial={{ translateY: 50, opacity: 0 }}
+                animate={{ translateY: 0, opacity: 1 }}
+                exit={{ translateY: 50, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="absolute bottom-0 left-0 right-0 p-4 pb-6 bg-gradient-to-t from-black via-black/90 to-transparent z-35 select-none space-y-3"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Progress bar timeline with left/right timestamps */}
+                <div className="flex items-center gap-2.5 w-full">
+                  <span className="font-mono text-[9px] text-gray-400 select-none shrink-0">{formatTime(currentTime)}</span>
+                  
+                  <div 
+                    ref={progressBarRef}
+                    onMouseMove={handleProgressBarMouseMove}
+                    onMouseLeave={handleProgressBarMouseLeave}
+                    onClick={handleProgressBarClick}
+                    onMouseDown={handleProgressBarMouseDown}
+                    onTouchStart={handleProgressBarTouchStart}
+                    onTouchMove={handleProgressBarTouchMove}
+                    onTouchEnd={handleProgressBarTouchEnd}
+                    className="relative flex-1 h-3 flex items-center cursor-pointer select-none"
+                  >
+                    {/* Progress track */}
+                    <div className="w-full h-[3px] bg-white/15 rounded-full overflow-hidden relative">
+                      <div 
+                        className="h-full bg-gradient-to-r from-red-650 via-red-500 to-amber-500 rounded-full relative shadow-[0_0_8px_#ef4444]"
+                        style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+                      />
                     </div>
-                  )}
+                  </div>
 
-                  {/* Progress track */}
-                  <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden relative group-hover:h-2 transition-all duration-150">
-                    <div 
-                      className="h-full bg-gradient-to-r from-red-650 via-red-500 to-amber-500 rounded-full relative shadow-[0_0_8px_#ef4444]"
-                      style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+                  <span className="font-mono text-[9px] text-gray-400 select-none shrink-0">-{formatTime(Math.max(0, duration - currentTime))}</span>
+                </div>
+
+                {/* Primary triggers and parameters bar */}
+                <div className="flex items-center justify-between gap-2.5 w-full">
+                  
+                  {/* Left Side: Play/Pause, Previous, Next */}
+                  <div className="flex items-center gap-2.5">
+                    <button 
+                      onClick={skipBackward}
+                      className="w-11 h-11 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white active:scale-95 transition-all cursor-pointer hover:bg-white/10"
+                      title="Rewind 10s"
                     >
-                      {/* Glowing progress slider head thumb */}
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-white rounded-full shadow-[0_0_10px_#ef4444] scale-0 group-hover:scale-100 transition-transform duration-100 z-10" />
+                      <Rewind size={16} />
+                    </button>
+
+                    <button 
+                      onClick={togglePlay}
+                      className="w-11 h-11 rounded-full bg-gradient-to-r from-[#ff2d55] to-[#ff6b00] text-white flex items-center justify-center transition-all shadow-[0_0_15px_rgba(255,45,85,0.4)] cursor-pointer active:scale-95"
+                      title="Play/Pause"
+                    >
+                      {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" className="ml-0.5" />}
+                    </button>
+
+                    <button 
+                      onClick={skipForward}
+                      className="w-11 h-11 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white active:scale-95 transition-all cursor-pointer hover:bg-white/10"
+                      title="Fast Forward 10s"
+                    >
+                      <FastForward size={16} />
+                    </button>
+                  </div>
+
+                  {/* Right Side: Volume, Settings, Fullscreen */}
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      onClick={toggleMute}
+                      className="w-11 h-11 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white transition-all cursor-pointer active:scale-95"
+                      title="Mute Volume"
+                    >
+                      {isMuted ? <VolumeX size={16} className="text-[#ff2d55]" /> : <Volume2 size={16} />}
+                    </button>
+
+                    <button
+                      onClick={() => setShowSettingsMenu((prev) => !prev)}
+                      className={`w-11 h-11 flex items-center justify-center rounded-xl border transition-all cursor-pointer active:scale-95 ${
+                        showSettingsMenu 
+                          ? "bg-[#ff2d55] text-white border-[#ff2d55]/45 shadow-[0_0_15px_rgba(255,45,85,0.5)]" 
+                          : "bg-white/5 text-gray-300 border-white/10"
+                      }`}
+                      title="Settings"
+                    >
+                      <Settings size={16} className={showSettingsMenu ? "animate-spin-slow" : ""} />
+                    </button>
+
+                    <button
+                      onClick={toggleFullscreen}
+                      className="w-11 h-11 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white transition-all cursor-pointer active:scale-95"
+                      title="Fullscreen"
+                    >
+                      {isFullscreen || isLayoutFullscreen ? <Minimize2 size={16} /> : <Maximize size={16} />}
+                    </button>
+                  </div>
+
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        ) : (
+          <AnimatePresence>
+            {controlsVisible && !showStartPopup && (
+              <motion.div 
+                initial={{ translateY: 50, opacity: 0 }}
+                animate={{ translateY: 0, opacity: 1 }}
+                exit={{ translateY: 50, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-black/95 via-black/85 to-transparent z-35 select-none space-y-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Sleek Progress scrub timeline */}
+                <div className="flex items-center gap-3 w-full">
+                  <span className="font-mono text-[10px] sm:text-xs text-gray-400 select-none shrink-0">{formatTime(currentTime)}</span>
+                  
+                  <div 
+                    ref={progressBarRef}
+                    onMouseMove={handleProgressBarMouseMove}
+                    onMouseLeave={handleProgressBarMouseLeave}
+                    onClick={handleProgressBarClick}
+                    onMouseDown={handleProgressBarMouseDown}
+                    onTouchStart={handleProgressBarTouchStart}
+                    onTouchMove={handleProgressBarTouchMove}
+                    onTouchEnd={handleProgressBarTouchEnd}
+                    className="relative flex-1 h-3 flex items-center cursor-pointer select-none group"
+                  >
+                    {/* Hover timestamp tooltip */}
+                    {hoverTime !== null && (
+                      <div 
+                        className="absolute bottom-6 px-2 py-1 bg-[#09090f] border border-white/15 text-white text-[10px] font-mono font-bold rounded shadow-2xl -translate-x-1/2 pointer-events-none z-50 transform"
+                        style={{ left: `${hoverX}px` }}
+                      >
+                        {formatTime(hoverTime)}
+                      </div>
+                    )}
+
+                    {/* Progress track */}
+                    <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden relative group-hover:h-2 transition-all duration-150">
+                      <div 
+                        className="h-full bg-gradient-to-r from-red-650 via-red-500 to-amber-500 rounded-full relative shadow-[0_0_8px_#ef4444]"
+                        style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+                      >
+                        {/* Glowing progress slider head thumb */}
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-white rounded-full shadow-[0_0_10px_#ef4444] scale-0 group-hover:scale-100 transition-transform duration-100 z-10" />
+                      </div>
                     </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 font-mono text-[10px] sm:text-xs select-none shrink-0 border-l border-white/10 pl-3">
+                    <span className="text-gray-400" title="Remaining Time">-{formatTime(Math.max(0, duration - currentTime))}</span>
+                    <span className="text-gray-600">/</span>
+                    <span className="text-gray-200" title="Total Duration">{formatTime(duration)}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 font-mono text-[10px] sm:text-xs select-none shrink-0 border-l border-white/10 pl-3">
-                  <span className="text-gray-400" title="Remaining Time">-{formatTime(Math.max(0, duration - currentTime))}</span>
-                  <span className="text-gray-600">/</span>
-                  <span className="text-gray-200" title="Total Duration">{formatTime(duration)}</span>
-                </div>
-              </div>
-
-              {/* Primary triggers and utility parameters controls bar */}
-              {bottomControlsContent}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                {/* Primary triggers and utility parameters controls bar */}
+                {bottomControlsContent}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
       </motion.div>
     </div>
   );
