@@ -186,13 +186,8 @@ export default function App() {
           id: document.id
         });
       });
-      // Sort highest request count first, then by creation date
-      list.sort((a, b) => {
-        if (b.requestCount !== a.requestCount) {
-          return b.requestCount - a.requestCount;
-        }
-        return b.createdAt - a.createdAt;
-      });
+      // Sort requests by creation date descending (newest first)
+      list.sort((a, b) => b.createdAt - a.createdAt);
       setRequests(list);
     }, (error) => {
       console.error("Requests onSnapshot error:", error);
@@ -461,7 +456,7 @@ export default function App() {
     });
     
     if (changed) {
-      updatedRequests.sort((a, b) => b.requestCount - a.requestCount);
+      updatedRequests.sort((a, b) => b.createdAt - a.createdAt);
       setRequests(updatedRequests);
     }
 
@@ -1397,9 +1392,6 @@ export default function App() {
                   <h2 className="font-display font-black text-xl sm:text-2xl text-white uppercase tracking-wider">
                     Feature Releases
                   </h2>
-                  <span className="text-xs text-gray-500 font-mono font-bold bg-white/5 px-2.5 py-1 rounded border border-white/5 uppercase">
-                    Total: {sortedMovies.length} Prints
-                  </span>
                 </div>
 
                 {/* Filter / Sort Actions controls */}
@@ -1492,14 +1484,9 @@ export default function App() {
                   {totalPagesCount > 1 && (
                     <div className="flex flex-col lg:flex-row items-center justify-between gap-4 pt-8 border-t border-white/5 bg-black/20 p-4 rounded-3xl backdrop-blur-md">
                       <span className="text-xs text-gray-400 font-mono flex flex-wrap items-center gap-2 justify-center lg:justify-start">
-                        <span className="bg-red-950/40 text-red-500 border border-red-500/20 px-2.5 py-1 rounded-lg text-[11px] font-bold shrink-0">
-                          Page {safeCurrentPage} of {totalPagesCount}
-                        </span>
-                        <span className="shrink-0 text-center lg:text-left">
-                          Showing <span className="text-white font-medium">{(safeCurrentPage - 1) * ITEMS_PER_PAGE + 1}</span> to{" "}
-                          <span className="text-white font-medium">{Math.min(totalMoviesCount, safeCurrentPage * ITEMS_PER_PAGE)}</span> of{" "}
-                          <span className="text-white font-medium">{totalMoviesCount}</span> movies
-                        </span>
+                      <span className="bg-red-950/40 text-red-500 border border-red-500/20 px-2.5 py-1 rounded-lg text-[11px] font-bold shrink-0">
+                        Page {safeCurrentPage}
+                      </span>
                       </span>
 
                       <div className="flex flex-wrap items-center gap-1.5 justify-center">
@@ -1680,9 +1667,6 @@ export default function App() {
                     <h3 className="font-display font-black text-lg text-white uppercase tracking-wider">
                       Saved Favorites
                     </h3>
-                    <span className="text-xs text-gray-500 font-mono font-bold bg-white/5 px-2.5 py-1 rounded border border-white/5 uppercase">
-                      Total: {sortedMovies.length} Prints
-                    </span>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2.5">
@@ -1762,14 +1746,9 @@ export default function App() {
                     {totalPagesCount > 1 && (
                       <div className="flex flex-col lg:flex-row items-center justify-between gap-4 pt-8 border-t border-white/5 bg-black/20 p-4 rounded-3xl backdrop-blur-md">
                         <span className="text-xs text-gray-400 font-mono flex flex-wrap items-center gap-2 justify-center lg:justify-start">
-                          <span className="bg-red-950/40 text-red-500 border border-red-500/20 px-2.5 py-1 rounded-lg text-[11px] font-bold shrink-0">
-                            Page {safeCurrentPage} of {totalPagesCount}
-                          </span>
-                          <span className="shrink-0 text-center lg:text-left">
-                            Showing <span className="text-white font-medium">{(safeCurrentPage - 1) * ITEMS_PER_PAGE + 1}</span> to{" "}
-                            <span className="text-white font-medium">{Math.min(totalMoviesCount, safeCurrentPage * ITEMS_PER_PAGE)}</span> of{" "}
-                            <span className="text-white font-medium">{totalMoviesCount}</span> movies
-                          </span>
+                        <span className="bg-red-950/40 text-red-500 border border-red-500/20 px-2.5 py-1 rounded-lg text-[11px] font-bold shrink-0">
+                          Page {safeCurrentPage}
+                        </span>
                         </span>
 
                         <div className="flex flex-wrap items-center gap-1.5 justify-center">

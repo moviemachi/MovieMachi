@@ -112,7 +112,7 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
     controlsTimeoutRef.current = setTimeout(() => {
       setControlsVisible(false);
       setShowSettingsMenu(false);
-    }, 10000); // 10 seconds of inactivity auto-hide
+    }, 3000); // 3 seconds of inactivity auto-hide
   };
 
   useEffect(() => {
@@ -275,12 +275,12 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
     touchStartRef.current = { x: 0, y: 0, val: 0, type: null, moved: false };
   };
 
-  const handleVideoClick = (e: MouseEvent) => {
+  const handleVideoClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isMobile) return; // Handled by handleTouchEnd on mobile
+    setControlsVisible(prev => !prev);
     if (!controlsVisible) {
-      handleUserInteraction();
-    } else {
-      togglePlay();
+      resetControlsTimeout();
     }
   };
 
@@ -512,6 +512,7 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
   const handlePlaying = () => {
     setIsLoading(false);
     setIsPlaying(true);
+    setControlsVisible(false); // Controls hide automatically when video starts/plays
   };
 
   useEffect(() => {
@@ -900,8 +901,13 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
           {/* Ambient Inner Shadow Glow for Cinematic OTT feel */}
           <div className="absolute -inset-1 rounded-[28px] bg-gradient-to-tr from-[#ff2d55]/10 to-[#ff6b00]/10 blur-xl pointer-events-none -z-10" />
 
-          <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#ff2d55] to-[#ff6b00] text-white flex items-center justify-center mx-auto shrink-0 shadow-[0_4px_15px_rgba(255,45,85,0.4)]">
-            <Film className="w-6 h-6 text-white" />
+          <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#ff2d55] to-[#ff6b00] text-white flex items-center justify-center mx-auto shrink-0 shadow-[0_4px_15px_rgba(255,45,85,0.4)] overflow-hidden">
+            <img 
+              src="/moviemachi_logo.png" 
+              alt="MovieMachi Logo" 
+              className="w-9 h-9 object-cover rounded-lg shadow-md"
+              referrerPolicy="no-referrer"
+            />
           </div>
           
           <div className="space-y-2">
@@ -1181,7 +1187,7 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
           {/* SINGLE PERSISTENT VIDEO ELEMENT - Never unmounted! */}
           <video
             ref={videoRef}
-            onClick={togglePlay}
+            onClick={handleVideoClick}
             onTimeUpdate={handleTimeUpdate}
             onLoadedMetadata={handleLoadedMetadata}
             onWaiting={handleWaiting}
@@ -1339,35 +1345,43 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
 
         {/* TOP BAR / HEADER */}
         {isMobile ? (
-          <div 
-            className="absolute top-0 left-0 right-0 z-30 p-4 bg-gradient-to-b from-black via-black/85 to-transparent flex items-start justify-between gap-3 text-white"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="min-w-0 flex-1">
-              <h3 className="font-display font-bold text-sm text-white truncate leading-tight">
-                {isTrailer ? `🎬 Trailer | ${movie.movieName}` : movie.movieName}
-              </h3>
-              <p className="text-[10px] text-gray-400 mt-1 truncate">
-                Directed by {movie.director || "Not Specified"}
-              </p>
-              <div className="flex items-center gap-1.5 mt-1.5">
-                <span className="text-[8px] font-mono font-black bg-[#ff2d55] text-white px-1.5 py-0.5 rounded uppercase tracking-wider shadow-[0_0_8px_rgba(255,45,85,0.4)] shrink-0">
-                  {movie.quality}
-                </span>
-                <span className="text-[9px] text-amber-500 font-bold font-mono">
-                  ★ {movie.rating || "9.5/10"}
-                </span>
-              </div>
-            </div>
-            
-            <button
-              onClick={handleClose}
-              className="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 border border-white/10 text-white cursor-pointer active:scale-95 transition-all shrink-0 shadow-lg hover:bg-[#ff2d55] hover:border-[#ff2d55]/40"
-              title="Close Player"
-            >
-              <X size={18} />
-            </button>
-          </div>
+          <AnimatePresence>
+            {controlsVisible && !showStartPopup && (
+              <motion.div 
+                initial={{ translateY: -50, opacity: 0 }}
+                animate={{ translateY: 0, opacity: 1 }}
+                exit={{ translateY: -50, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="absolute top-0 left-0 right-0 z-30 p-4 bg-gradient-to-b from-black via-black/85 to-transparent flex items-start justify-between gap-3 text-white"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-display font-bold text-sm text-white truncate leading-tight">
+                    {isTrailer ? `🎬 Trailer | ${movie.movieName}` : movie.movieName}
+                  </h3>
+                  <p className="text-[10px] text-gray-400 mt-1 truncate">
+                    Directed by {movie.director || "Not Specified"}
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <span className="text-[8px] font-mono font-black bg-[#ff2d55] text-white px-1.5 py-0.5 rounded uppercase tracking-wider shadow-[0_0_8px_rgba(255,45,85,0.4)] shrink-0">
+                      {movie.quality}
+                    </span>
+                    <span className="text-[9px] text-amber-500 font-bold font-mono">
+                      ★ {movie.rating || "9.5/10"}
+                    </span>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={handleClose}
+                  className="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 border border-white/10 text-white cursor-pointer active:scale-95 transition-all shrink-0 shadow-lg hover:bg-[#ff2d55] hover:border-[#ff2d55]/40"
+                  title="Close Player"
+                >
+                  <X size={18} />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         ) : (
           <AnimatePresence>
             {controlsVisible && !showStartPopup && (

@@ -67,10 +67,6 @@ export default function Header({
               </div>
             </div>
 
-            {/* Micro pill displaying cumulative count on smaller viewports */}
-            <div className="md:hidden text-[10px] sm:text-xs font-mono font-bold text-red-400 bg-red-950/40 border border-red-900/45 px-2.5 py-1 rounded-full uppercase">
-              {totalCount} Available
-            </div>
           </div>
 
           {/* Floating dynamic search block with focal glows */}

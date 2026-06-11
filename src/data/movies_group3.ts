@@ -20,42 +20,6 @@ export const moviesGroup3: Movie[] = [
     watchUrl: "https://s01.hotshare.link/Moviesda.Mobi_-_Vaa_Vaathiyaar_2026_Original_720p_HD.mp4?stream=1"
   },
   {
-    title: "Sirai (2025)",
-    image: "https://imgs.search.brave.com/jtRUTdEJEUYGPfnEzKPp3UqRphcXZWPRlUXgKrgFyOQ/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9jZG4u/ZGlzdHJpY3QuaW4v/bW92aWVzLWFzc2V0/cy9pbWFnZXMvY2lu/ZW1hL1NpcmFpX0dh/bGxlcnktODA3YzU5/MjAtNzgzOC0xMWYw/LThkZjMtZGIwMWQx/YmFhNDQ0LmpwZz9p/bT1SZXNpemUsd2lk/dGg9MzIw",
-    movieName: "Sirai (2025)",
-    director: "Suresh Rajakumari",
-    starring: "Vikram Prabhu, L. K. Akshay Kumar, Anishma Anilkumar",
-    genres: ["Action", "Drama", "Thriller"],
-    quality: "Original HD",
-    language: "Tamil",
-    rating: "9.4/10",
-    lastUpdated: "23 January 2026",
-    links: [
-      { label: "Download 360p", url: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPWU1ZDU0MzBiNWEzYjcwZWQxNzI2YTJkOWUxMDNmYmFjJmV4cD0xNzgwOTAyMjc1JnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvU2lyYWkgKDIwMjUpL1NpcmFpIChPcmlnaW5hbCkvU2lyYWkgKDM2MHAgSEQpL01vdmllc2RhLk1vYmkgLSBTaXJhaSAyMDI1IE9yaWdpbmFsIDM2MHAgSEQubXA0", className: "p480" },
-      { label: "Download 720p", url: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPTI3NjhhMWI5NTg5Y2U2MGY0YjdiY2EyZDViY2VjOWU3JmV4cD0xNzgwOTAyMzAxJnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvU2lyYWkgKDIwMjUpL1NpcmFpIChPcmlnaW5hbCkvU2lyYWkgKDcyMHAgSEQpL01vdmllc2RhLk1vYmkgLSBTaXJhaSAyMDI1IE9yaWdpbmFsIDcyMHAgSEQubXA0", className: "p720" },
-      { label: "Download 1080p", url: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPTU1YzhkODE3MGQ4ZjVjMzI0MGIxZGRhMzI0ODkyZjA2JmV4cD0xNzgwOTAyMzY5JnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvU2lyYWkgKDIwMjUpL1NpcmFpIChPcmlnaW5hbCkvU2lyYWkgKDEwODBwIEhEKS9Nb3ZpZXNkYS5Nb2JpIC0gU2lyYWkgMjAyNSBPcmlnaW5hbCAxMDgwcCBIRCAoMi40IEdCKS5tcDQ=", className: "p1080" },
-    ],
-    watchUrl: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPTg2ZjYyMzQ4MWE3YTA2MjU2N2RkNWZjMTQ0MTQxNjU4JmV4cD0xNzc5OTM3MTE4JnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvU2lyYWkgKDIwMjUpL1NpcmFpIChPcmlnaW5hbCkvU2lyYWkgKDcyMHAgSEQpL01vdmllc2RhLk1vYmkgLSBTaXJhaSAyMDI1IE9yaWdpbmFsIDcyMHAgSEQubXA0&stream=1"
-  },
-  {
-    title: "Tere Ishk Mein (2025)",
-    image: "https://imgs.search.brave.com/cPjTzQ70SMiUWwG0r4gHKTQTxCVovuhpqFaAH5zMKi8/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9jZG4u/ZGlzdHJpY3QuaW4v/bW92aWVzLWFzc2V0/cy9pbWFnZXMvY2lu/ZW1hL1RlcmUtSXNo/ay1NZWluX0NvdmVy/LWUzYWU3YjkwLWMx/NzYtMTFmMC1hYjk4/LTk1ZjhmYjJkOGEw/OC5qcGc",
-    movieName: "Tere Ishk Mein (2025)",
-    director: "Aanand L. Rai",
-    starring: "Dhanush, Kriti Sanon",
-    genres: ["Drama", "Romantic"],
-    quality: "Original HD",
-    language: "Tamil",
-    rating: "9.1/10",
-    lastUpdated: "23 January 2026",
-    links: [
-      { label: "Download 360p", url: "https://www.tamilprint60.art/filedownload.php?fid=40960&tt=16fee37559dbd42b448204446d02089f", className: "p480" },
-      { label: "Download 720p", url: "https://www.tamilprint60.art/filedownload.php?fid=40968&tt=16fee37559dbd42b448204446d02089f", className: "p720" },
-      { label: "Download 1080p", url: "https://www.tamilprint60.art/filedownload.php?fid=40970&tt=16fee37559dbd42b448204446d02089f", className: "p1080" },
-    ],
-    watchUrl: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPWZhODg0Y2NkM2VlNzA0NjMyZDEzODA3MzkxOTI2OWRlJmV4cD0xNzc5OTM3MTc2JnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvVGVyZSBJc2hrIE1laW4gKDIwMjUpL1RlcmUgSXNoayBNZWluIChPcmlnaW5hbCkvVGVyZSBJc2hrIE1laW4gKDcyMHAgSEQpL01vdmllc2RhLk1vYmkgLSBUZXJlIElzaGsgTWVpbiAyMDI1IE9yaWdpbmFsIDcyMHAgSEQubXA0&stream=1"
-  },
-  {
     title: "Galatta Family (2025)",
     image: "https://imgs.search.brave.com/hsEuVdliBeHZcwPuUJgFFf7BG7Ip0lvvyYHm4X2XlrM/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9jZG4u/ZGlzdHJpY3QuaW4v/bW92aWVzLWFzc2V0/cy9pbWFnZXMvY2lu/ZW1hL2dhbGxlcnkl/MjAoNCktYmE1ZGY5/MTAtZDAyYS0xMWYw/LWI5YzktNjFmMDk4/MDdiMDNkLmpwZz9p/bT1SZXNpemUsd2lk/dGg9MzIw",
     movieName: "Galatta Family (2025)",

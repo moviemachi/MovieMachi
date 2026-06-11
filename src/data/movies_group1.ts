@@ -20,26 +20,9 @@ export const moviesGroup1: Movie[] = [
     watchUrl: "https://s31.cdnserver04.xyz/Moviesda.Mobi_-_Valavaara_2026_Original_720p_HD.mp4?stream=1",
     trailerUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
   },
-   {
-    title: "Gullak (2026) Season 5",
-    image: "https://imgs.search.brave.com/I3bTD0FWcBsWacTgNrACQycgGyZCtEs1hmIknhZI_go/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9qYXkt/aG8uY29tL3dwLWNv/bnRlbnQvdXBsb2Fk/cy8yMDI2LzA1L1Rv/eGljLUJpZy1VcGRh/dGUtWWFzaC1TdGFy/cmVyLUV5ZXMtSW5k/ZXBlbmRlbmNlLURh/eS1XZWVrZW5kLUNs/YXNoLTIwMjYtMDUt/MDlUMTYzMDA3LjIy/MS0xMDI0eDU3Ni5q/cGc",
-    movieName: "Gullak (2026)",
-    director: "Abhay Raut",
-    starring: "Jameel Khan, Geetanjali Kulkarni, Harsh Mayar",
-    genres: ["Family", "Comedy","Drama"],
-    quality: "Original HD",
-    language: "Tamil",
-    rating: "7.2/10",
-    lastUpdated: "07 June 2026",
-    links: [
-      { label: "Download Epi 1", url: "https://big2.uptoweb.link/Moviesda.Mobi_-_Gullak_2026_Season_05__Epi_01___1080p_HD_.mp4", className: "Epi" },
-      { label: "Download Epi 2", url: "https://big1.uptoweb.link/Moviesda.Mobi_-_Gullak_2026_Season_05__Epi_02___1080p_HD_.mp4", className: "Epi" },
-    ],
-    trailerUrl: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8"
-  },
   {
     title: "Parimala and Co (2026)",
-    image: "https://imgs.search.brave.com/2JkBBji90G99cnovanIOImbceB6qkueNbAOREYDz4yM/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9lkp-h/cHMuYm1zY2RuLmNv/bS9ldmVudHMvbW9i/aWxlL2V0MDAwMDYx/MDQuanBn",
+    image: "https://imgs.search.brave.com/Msu_Hl6xO7IqbB34wp9ffJwYlVQ5EPJ1HgSj2R7uSfE/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9jZG4u/ZGlzdHJpY3QuaW4v/bW92aWVzLWFzc2V0/cy9pbWFnZXMvY2lu/ZW1hL1BhcmltYWxh/LWFuZC1Db19Qb3N0/ZXItODJjZWMyNjAt/NWNhYS0xMWYxLTky/YTUtYWYxOWQ5MzM2/NmM2LmpwZz9mb3Jt/YXQ9d2VicCZpbXdp/ZHRoPTI1Ng",
     movieName: "Parimala and Co (2026)",
     director: "Pandiraj",
     starring: "Jayaram Subramaniam, Urvashi, Mysskin",
@@ -395,7 +378,7 @@ export const moviesGroup1: Movie[] = [
     links: [
       { label: "Download 360p", url: "https://s03.cdnserver01.xyz/Moviesda.Mobi_-_Mr_and_Mrs_Bachelor_2026_Original_360p_HD.mp4", className: "p480" },
       { label: "Download 720p", url: "https://s34.cdnserver04.xyz/Moviesda.Mobi_-_Mr_and_Mrs_Bachelor_2026_Original_720p_HD.mp4", className: "p720" },
-      { label: "Download 1080p", url: "", className: "p1080" }
+      { label: "Download 1080p", url: "https://s35.cdnserver04.xyz/Moviesda.Mobi_-_Mr_and_Mrs_Bachelor_2026_Original_1080p_HD.mp4", className: "p1080" }
     ],
     watchUrl: "https://s14.cdnserver02.xyz/Moviesda.Mobi_-_Mr_and_Mrs_Bachelor_2026_Original_720p_HD.mp4?stream=4"
   },
@@ -434,28 +417,6 @@ export const moviesGroup1: Movie[] = [
       { label: "Download 1080p", url: "https://s02.dubshare.one/isaiDub.io_-_Mermaid_2026_Original_1080p_HD.mp4", className: "p1080" }
     ],
     watchUrl: "https://s08.dubshare.one/isaiDub.io_-_Mermaid_2026_Original_720p_HD.mp4?stream=1"
-  },
-  {
-    title: "Brothers And Sisters (2026) Season 1",
-    image: "https://imgs.search.brave.com/5nPe4wKMjlpQKaobI_lnlUKdrsXMhXNQQKqfUG3uZJw/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9pbWFn/ZXN2cy5vbmVpbmRp/YS5jb20vcGgtYmln/LzIwMjYvMDUvYnJv/dGhlcnMtYW5kLXNp/c3RlcnMtd2ViLXNl/cmllcy13aGVuLWFu/ZC13aGVyZS10by13/YXRjaC1vbi1vdHQx/Nzc5NzA0NzU4XzUu/anBn",
-    movieName: "Brothers And Sisters (2026)",
-    director: "Chidambaram Manivannan",
-    starring: "Bose Venkat, Gayathri Shastry, Nikhila Sankar",
-    genres: ["Comedy", "Drama"],
-    quality: "Original HD",
-    language: "Tamil",
-    rating: "7.9/10",
-    lastUpdated: "03 June 2026",
-    links: [
-      { label: "Download Epi 1", url: "https://big3.uptoweb.link/Moviesda.Mobi_-_Brothers_And_Sisters_2026_Season_01__Epi_01___1080p_HD_.mp4", className: "Epi" },
-      { label: "Download Epi 2", url: "https://big3.uptoweb.link/Moviesda.Mobi_-_Brothers_And_Sisters_2026_Season_01__Epi_02___1080p_HD_.mp4", className: "Epi" },
-      { label: "Download Epi 3", url: "https://big1.uptoweb.link/Moviesda.Mobi_-_Brothers_And_Sisters_2026_Season_01__Epi_03___1080p_HD_.mp4", className: "Epi" },
-      { label: "Download Epi 4", url: "https://big2.uptoweb.link/Moviesda.Mobi_-_Brothers_And_Sisters_2026_Season_01__Epi_04___1080p_HD_.mp4", className: "Epi" },
-      { label: "Download Epi 5", url: "https://big2.uptoweb.link/Moviesda.Mobi_-_Brothers_And_Sisters_2026_Season_01__Epi_05___1080p_HD_.mp4", className: "Epi" },
-      { label: "Download Epi 6", url: "https://big3.uptoweb.link/Moviesda.Mobi_-_Brothers_And_Sisters_2026_Season_01__Epi_06___1080p_HD_.mp4", className: "Epi" },
-      { label: "Download Epi 7", url: "https://big3.uptoweb.link/Moviesda.Mobi_-_Brothers_And_Sisters_2026_Season_01__Epi_07___1080p_HD_.mp4", className: "Epi" },
-      { label: "Download Epi 8", url: "https://big3.uptoweb.link/Moviesda.Mobi_-_Brothers_And_Sisters_2026_Season_01__Epi_08___1080p_HD_.mp4", className: "Epi" },
-    ]
   },
   {
     title: "Panda Plan 2 The Magical Tribe (2026)",
@@ -648,24 +609,6 @@ export const moviesGroup1: Movie[] = [
       { label: "Download 1080p", url: "https://cdn.juicybits.site/files/www.1TamilMV.futbol_-_Red_Label_2026_Tamil_TRUE_WEB-DL_-_1080p_-_AVC_-_DD5.1_-_192Kbps__AAC_2.0_-_2.5GB_-_ESub.mkv?token=626580c50a7bd7e67c9d254dacc8d3d9&exp=1779997946", className: "p1080" },
     ],
     watchUrl: "https://s21.cdnserver03.xyz/Moviesda.Mobi_-_Red_Label_2026_Original_720p_HD.mp4?stream=1"
-  },
-  {
-    title: "Karuppu (2026)",
-    image: "https://imgs.search.brave.com/aP5Fz6hdHJeZxUZIuGN--bjvl8iy9vS_UvZfppjizAs/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9hc3Nl/dHMtaW4uYm1zY2Ru/LmNvbS9pZWRiL21v/dmllcy9pbWFnZXMv/bW9iaWxlL3RodW1i/bmFpbC94bGFyZ2Uv/a2FydXBwdS1ldDAw/NDUwNTczLTE3NTMy/NTM1MTAuanBn",
-    movieName: "Karuppu (2026)",
-    director: "RJ Balaji",
-    starring: "Suriya Sivakumar, Trisha Krishnan, RJ Balaji",
-    genres: ["Action", "Drama", "Fantasy", "Thriller"],
-    quality: "HQ PreDVD",
-    language: "Tamil",
-    rating: "8.1/10",
-    lastUpdated: "17 May 2026",
-    links: [
-      { label: "Download 360p", url: "https://s11.cdnserver02.xyz/Karuppu_2026_HQ_PreDVD_(v2)_360p_HD.mp4", className: "p480" },
-      { label: "Download 720p", url: "https://s22.cdnserver03.xyz/Karuppu_2026_HQ_PreDVD_(v2)_720p_HD.mp4", className: "p720" },
-      { label: "Download 1080p", url: "https://s35.cdnserver04.xyz/Karuppu_2026_HQ_PreDVD_(v2)_1080p_HD.mp4", className: "p1080" },
-    ],
-    watchUrl: "https://s13.cdnserver02.xyz/Karuppu_2026_HQ_PreDVD_(v2)_1080p_HD.mp4?stream=1"
   },
   {
     title: "Dhurandhar The Revenge (2026)",

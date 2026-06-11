@@ -56,23 +56,6 @@ export const moviesGroup2: Movie[] = [
     watchUrl: "https://s23.cdnserver03.xyz/Bharathanatyam_2_Mohiniyattam_2026_Original_720p_HD.mp4?stream=1"
   },
   {
-    title: "Love 911 (2024)",
-    image: "https://imgs.search.brave.com/lBY8NL53kM2Sy9w6EqTY3TJKQ9CyZV9Hu6KF8kFhEFQ/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS50aGVtb3ZpZWRi/Lm9yZy90L3AvdzMw/MF9hbmRfaDQ1MF9m/YWNlL2FCMXpHYzVC/TkhTYVFsRWhPU25p/NHRzOERyTC5qcGc",
-    movieName: "Love 911 (2024)",
-    director: "Gi-hoon Jeong",
-    starring: "Go Soo, Han Hyo-joo",
-    genres: ["Comedy", "Drama", "Romance"],
-    quality: "BDRip",
-    language: "Tamil",
-    rating: "6.9/10",
-    lastUpdated: "30 October 2024",
-    links: [
-      { label: "Download 560p", url: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjImaGFzaD04MTk5N2UxYWYyNWMyN2EyZWJlMzViMmM2YzIxZTVkYyZleHA9MTc3OTg0NzA3NCZwYXRoPVRhbWlsIER1YmJlZCBNb3ZpZXMvTG92ZSA5MTEgKDIwMjQpL0xvdmUgOTExIChPcmlnaW5hbCkvTG92ZSA5MTEgKDM2MHAgSEQpL0xvdmUgOTExIDIwMjQgMzYwcCBIRC5tcDQ=", className: "p720" },
-      { label: "Download 1080p", url: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjImaGFzaD0zNTA3MTI1ZjNkOTk4MTM4NjhhYjNiNmFjOWJiMzNkZCZleHA9MTc3OTg0NzA5NiZwYXRoPVRhbWlsIER1YmJlZCBNb3ZpZXMvTG92ZSA5MTEgKDIwMjQpL0xvdmUgOTExIChPcmlnaW5hbCkvTG92ZSA5MTEgKDcyMHAgSEQpL0xvdmUgOTExIDIwMjQgNzIwcCBIRC5tcDQ=", className: "p1080" }
-    ],
-    watchUrl: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjImaGFzaD1jYjZiM2ZkMzdhYzgwZGQ4M2U4NGI0MjQxY2Y4OTk5MyZleHA9MTc3OTg5ODc0NSZwYXRoPVRhbWlsIER1YmJlZCBNb3ZpZXMvTG92ZSA5MTEgKDIwMjQpL0xvdmUgOTExIChPcmlnaW5hbCkvTG92ZSA5MTEgKDcyMHAgSEQpL0xvdmUgOTExIDIwMjQgNzIwcCBIRC5tcDQ=&stream=1"
-  },
-  {
     title: "Love Insurance Kompany (2026)",
     image: "https://imgs.search.brave.com/J8EhMmS7TVRayJjwIrq7wdjY-2YI_c0IjcxeERp2I4Q/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9wcmV2/aWV3LnJlZGQuaXQv/bG92ZS1pbnN1cmFu/Y2Uta29tcGFueS0y/MDI2LW5vdy1zdHJl/YW1pbmctb24tYW1h/em9uLXByaW1lLXYw/LThzbzdmYW4waWZ6/ZzEuanBlZz93aWR0/aD02NDAmY3JvcD1z/bWFydCZhdXRvPXdl/YnAmcz03YTYxMmQ0/OTI5NTUxN2ZkOWI2/N2Y0M2YzNjM1NDNj/MWI1MDI5MGVj",
     movieName: "Love Insurance Kompany (2026)",
@@ -89,111 +72,6 @@ export const moviesGroup2: Movie[] = [
       { label: "Download 1080p", url: "https://s14.cdnserver02.xyz/Moviesda.Mobi_-_Love_Insurance_Kompany_2026_Original_1080p_HD_(3.6_GB).mp4", className: "p1080" },
     ],
     watchUrl: "https://s14.cdnserver02.xyz/Moviesda.Mobi_-_Love_Insurance_Kompany_2026_Original_720p_HD.mp4?stream=1"
-  },
-  {
-    title: "The Girlfriend (2025)",
-    image: "https://pbs.twimg.com/media/G6WsYh2aUAA-AV2.jpg",
-    movieName: "The Girlfriend (2025)",
-    director: "Rahul Ravindran",
-    starring: "Dheekshith Shetty, Rashmika Mandanna, Rao Ramesh",
-    genres: ["Drama", "Romantic"],
-    quality: "Original HD",
-    language: "Tamil",
-    rating: "8.6/10",
-    lastUpdated: "05 December 2025",
-    links: [
-      { label: "Download 360p", url: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPTAxZTFjOTRhMzU1ZGY3Yzc4YjM1ZDAwOGEwMzNiOGEzJmV4cD0xNzc5OTg2NDY4JnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvVGhlIEdpcmxmcmllbmQgKDIwMjUpL1RoZSBHaXJsZnJpZW5kIChPcmlnaW5hbCkvVGhlIEdpcmxmcmllbmQgKDM2MHAgSEQpL01vdmllc2RhLk1vYmkgLSBUaGUgR2lybGZyaWVuZCAyMDI1IE9yaWdpbmFsIDM2MHAgSEQubXA0", className: "p480" },
-      { label: "Download 720p", url: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPTEwYTM4M2IyNjM2ZmRmMGY5YTU2OWM1ZDI1YTg0NzU5JmV4cD0xNzc5OTg2NTAxJnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvVGhlIEdpcmxmcmllbmQgKDIwMjUpL1RoZSBHaXJsZnJpZW5kIChPcmlnaW5hbCkvVGhlIEdpcmxmcmllbmQgKDcyMHAgSEQpL01vdmllc2RhLk1vYmkgLSBUaGUgR2lybGZyaWVuZCAyMDI1IE9yaWdpbmFsIDcyMHAgSEQubXA0", className: "p720" },
-      { label: "Download 1080p", url: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPTEwMzkwNjczOGUyYWRkYzc1OGIxYzY3OWU0MzBkMTRmJmV4cD0xNzc5OTg2NzUxJnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvVGhlIEdpcmxmcmllbmQgKDIwMjUpL1RoZSBHaXJsZnJpZW5kIChPcmlnaW5hbCkvVGhlIEdpcmxmcmllbmQgKDEwODBwIEhEKS9Nb3ZpZXNkYS5Nb2JpIC0gVGhlIEdpcmxmcmllbmQgMjAyNSBPcmlnaW5hbCAxMDgwcCBIRCubXA0", className: "p1080" }
-    ],
-    watchUrl: "https://mv1.uptomkv.ch/files/Tamil%202025%20Movies/The%20Girlfriend%20(2025)/The%20Girlfriend%20(Original)/The%20Girlfriend%20(720p%20HD)/Moviesda.Mobi%20-%20The%20Girlfriend%202025%20Original%20720p%20HD.mp4?h=e1ebf6836442228d1ba609fc90bcbcd7c5573967984099a716874bb1aa8e05c7&e=1780850503"
-  },
-  {
-    title: "Iron Man 3 (2013)",
-    image: "https://imgs.search.brave.com/TtEaa5jhrd1pOAvYreC9n6vX_5r48Y0ZDD-jyi-EIUU/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tLm1l/ZGlhLWFtYXpvbi5j/b20vaW1hZ2VzL0kv/NjE4ajVudkRpV0wu/anBn",
-    movieName: "Iron Man 3 (2013)",
-    director: "Shane Black",
-    starring: "Robert Downey Jr., Gwyneth Paltrow",
-    genres: ["Action", "Adventure", "Sci-Fi"],
-    quality: "BDRip",
-    language: "Tamil",
-    rating: "7.2/10",
-    lastUpdated: "28 January 2021",
-    links: [
-      { label: "Download 360p", url: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjYmaGFzaD1iYWNkNzYwZjRhM2NhMDcyMTcwMzYyNGJmOWEyMDFlMyZleHA9MTc3OTgxNTcwMSZwYXRoPVRhbWlsIER1YmJlZCBDb2xsZWN0aW9ucy8gSXJvbiBNYW4gVHJpbG9neSBDb2xsZWN0aW9ucy9Jcm9uIE1hbiAzICgyMDEzKS9Jcm9uIE1hbiAzICg0ODB4MzIwKS9Jcm9uIE1hbiAzLm1wNA==", className: "p480" },
-      { label: "Download 560p", url: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjYmaGFzaD0wODg2M2E4Y2FhMGRiYWFjZGNmZmI5ZDcxMTg5ZWViOSZleHA9MTc3OTgxNTczMCZwYXRoPVRhbWlsIER1YmJlZCBDb2xsZWN0aW9ucy8gSXJvbiBNYW4gVHJpbG9neSBDb2xsZWN0aW9ucy9Jcm9uIE1hbiAzICgyMDEzKS9Jcm9uIE1hbiAzICg2NDB4MzYwKS9Jcm9uIE1hbiAzIEhELm1wNA==", className: "p720" }
-    ],
-    watchUrl: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjYmaGFzaD0wYTRiNzNlY2E5YjJlOTdhYTdjYTdmMjNiYmQ4NGExZSZleHA9MTc3OTg5OTk2OCZwYXRoPVRhbWlsIER1YmJlZCBDb2xsZWN0aW9ucy8gSXJvbiBNYW4gVHJpbG9neSBDb2xsZWN0aW9ucy9Jcm9uIE1hbiAzICgyMDEzKS9Jcm9uIE1hbiAzICg2NDB4MzYwKS9Jcm9uIE1hbiAzIEhELm1wNA==&stream=1"
-  },
-  {
-    title: "Iron Man 2 (2010)",
-    image: "https://imgs.search.brave.com/folb-nmfiLYd5_Z_yezM1Ni7TlcsPjukgTDyCbdL-VM/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly93YWxs/cGFwZXJjYXQuY29t/L3cvZnVsbC81Lzcv/Yi8yMTM5MzcwLTE0/MDB4MjEwMC1waG9u/ZS1oZC1pcm9uLW1h/bi0yLWJhY2tncm91/bmQtcGhvdG8uanBn",
-    movieName: "Iron Man 2 (2010)",
-    director: "Jon Favreau",
-    starring: "Robert Downey Jr., Gwyneth Paltrow",
-    genres: ["Action", "Adventure", "Sci-Fi"],
-    quality: "BDRip",
-    language: "Tamil",
-    rating: "7.0/10",
-    lastUpdated: "28 January 2021",
-    links: [
-      { label: "Download 360p", url: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjYmaGFzaD1hNTdjOGY0NTgyMDQyNTMzNDU4OWY3YzU1MWNkYWZjNCZleHA9MTc3OTgxNTQ2NSZwYXRoPVRhbWlsIER1YmJlZCBDb2xsZWN0aW9ucy8gSXJvbiBNYW4gVHJpbG9neSBDb2xsZWN0aW9ucy9Jcm9uIE1hbiAyICgyMDEwKS9Jcm9uIE1hbiAyICg0ODB4MzIwKS9Jcm9uIE1hbiAyLm1wNA==", className: "p480" },
-      { label: "Download 560p", url: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjYmaGFzaD0yYTEzNmFmYTU1MjFkMjdjNzczZjk2OGZhZGI0YjRiMiZleHA9MTc3OTgxNTQ4NSZwYXRoPVRhbWlsIER1YmJlZCBDb2xsZWN0aW9ucy8gSXJvbiBNYW4gVHJpbG9neSBDb2xsZWN0aW9ucy9Jcm9uIE1hbiAyICgyMDEwKS9Jcm9uIE1hbiAyICg2NDB4MzYwKS9Jcm9uIE1hbiAyIEhELm1wNA==", className: "p720" }
-    ],
-    watchUrl: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjYmaGFzaD0yNTE4MjU0N2JhOWQxZDcxNWMwMzE3NDUzMjQ3MGJkYiZleHA9MTc3OTg5OTAyMiZwYXRoPVRhbWlsIER1YmJlZCBDb2xsZWN0aW9ucy8gSXJvbiBNYW4gVHJpbG9neSBDb2xsZWN0aW9ucy9Jcm9uIE1hbiAyICgyMDEwKS9Jcm9uIE1hbiAyICg2NDB4MzYwKS9Jcm9uIE1hbiAyIEhELm1wNA==&stream=1"
-  },
-  {
-    title: "Iron Man 1 (2008)",
-    image: "https://imgs.search.brave.com/KJ1ruoCHwn76heFLU2ObEJMxYLCyI0o8SsPhzoUd7jQ/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly93YWxs/cGFwZXJhY2Nlc3Mu/Y29tL2Z1bGwvMjA2/OTQ5MS5qcGc",
-    movieName: "Iron Man 1 (2008)",
-    director: "Jon Favreau",
-    starring: "Robert Downey Jr., Terrence Howard",
-    genres: ["Action", "Adventure", "Sci-Fi"],
-    quality: "BDRip",
-    language: "Tamil",
-    rating: "7.9/10",
-    lastUpdated: "28 January 2021",
-    links: [
-      { label: "Download 360p", url: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjYmaGFzaD1kOTE4YjRjNTFjZmI3OGYyOTcyOTlhOGY5ZjQxZTlmZiZleHA9MTc3OTgxNTE5MyZwYXRoPVRhbWlsIER1YmJlZCBDb2xsZWN0aW9ucy8gSXJvbiBNYW4gVHJpbG9neSBDb2xsZWN0aW9ucy9Jcm9uIE1hbiAxICgyMDA4KS9Jcm9uIE1hbiAxICg0ODB4MzIwKS9Jcm9uIE1hbiAxLm1wNA==", className: "p480" },
-      { label: "Download 560p", url: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjYmaGFzaD1lYTQwZWZiZGVlYTBlMjdiYjgyZDAyYmIwYWJiMjAzZSZleHA9MTc3OTgxNTIxOCZwYXRoPVRhbWlsIER1YmJlZCBDb2xsZWN0aW9ucy8gSXJvbiBNYW4gVHJpbG9neSBDb2xsZWN0aW9ucy9Jcm9uIE1hbiAxICgyMDA4KS9Jcm9uIE1hbiAxICg2NDB4MzYwKS9Jcm9uIE1hbiAxIEhELm1wNA==", className: "p720" }
-    ],
-    watchUrl: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjYmaGFzaD1lZjYxNGZmYzlhZDUyODQwZmU2Nzc5MmJmN2YxYTFlYiZleHA9MTc3OTg5OTA3NCZwYXRoPVRhbWlsIER1YmJlZCBDb2xsZWN0aW9ucy8gSXJvbiBNYW4gVHJpbG9neSBDb2xsZWN0aW9ucy9Jcm9uIE1hbiAxICgyMDA4KS9Jcm9uIE1hbiAxICg2NDB4MzYwKS9Jcm9uIE1hbiAxIEhELm1wNA==&stream=1"
-  },
-  {
-    title: "IT Chapter Two (2019)",
-    image: "https://imgs.search.brave.com/617O5H6n2MVUlA4htSymt3gW--z5YvZ8ohOH-T6jS_E/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tLm1l/ZGlhLWFtYXpvbi5j/b20vaW1hZ2VzL0kv/ODExTENVK1IzRUwu/anBn",
-    movieName: "IT Chapter Two (2019)",
-    director: "Andy Muschietti",
-    starring: "Bill Skarsgard, James McAvoy, Jessica Chastain",
-    genres: ["Horror", "Thriller"],
-    quality: "Original HD",
-    language: "Tamil",
-    rating: "6.8/10",
-    lastUpdated: "29 October 2025",
-    links: [
-      { label: "Download 360p", url: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjcmaGFzaD1hMjM5YTUxMWM4MjRlODRkZDEwOTljOWQ2ZjIyYTJkMiZleHA9MTc3OTgxNDgzNyZwYXRoPVRhbWlsIER1YmJlZCBNb3ZpZXMvSVQgQ2hhcHRlciBUd28gKDIwMTkpL0lUIENoYXB0ZXIgVHdvIChPcmlnaW5hbCkvSVQgQ2hhcHRlciBUd28gKDM2MHAgSEQpL0lUIENoYXB0ZXIgVHdvIDIwMTkgT3JpZ2luYWwgMzYwcCBIRC5tcDQ=", className: "p480" },
-      { label: "Download 720p", url: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjcmaGFzaD0zODc3NDU1YzMzOWJhMjg4ZmZhYmE4ZmNlMzhkMWYxMiZleHA9MTc3OTgxNDU5OSZwYXRoPVRhbWlsIER1YmJlZCBNb3ZpZXMvSVQgQ2hhcHRlciBUd28gKDIwMTkpL0lUIENoYXB0ZXIgVHdvIChPcmlnaW5hbCkvSVQgQ2hhcHRlciBUd28gKDcyMHAgSEQpL0lUIENoYXB0ZXIgVHdvIDIwMTkgT3JpZ2luYWwgNzIwcCBIRC5tcDQ=", className: "p720" },
-      { label: "Download 1080p", url: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjcmaGFzaD1jNTc4ZmQxYTZmMzFiYWQ4NjhhZGRkOTQ2YTYwNzBlNCZleHA9MTc3OTgxNDg3OSZwYXRoPVRhbWlsIER1YmJlZCBNb3ZpZXMvSVQgQ2hhcHRlciBUd28gKDIwMTkpL0lUIENoYXB0ZXIgVHdvIChPcmlnaW5hbCkvSVQgQ2hhcHRlciBUd28gKDEwODBwIEhEKS9JVCBDaGFwdGVyIFR3byAyMDE5IE9yaWdpbmFsIDEwODBwIEhELm1wNA==", className: "p1080" }
-    ],
-    watchUrl: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjcmaGFzaD02MjM4MmU5MTUzNjZmZGEzMGEwODU4YTg3ZTgxYzZlMiZleHA9MTc3OTg5OTE0OCZwYXRoPVRhbWlsIER1YmJlZCBNb3ZpZXMvSVQgQ2hhcHRlciBUd28gKDIwMTkpL0lUIENoYXB0ZXIgVHdvIChPcmlnaW5hbCkvSVQgQ2hhcHRlciBUd28gKDEwODBwIEhEKS9JVCBDaGFwdGVyIFR3byAyMDE5IE9yaWdpbmFsIDEwODBwIEhELm1wNA==&stream=1"
-  },
-  {
-    title: "IT Chapter One (2017)",
-    image: "https://imgs.search.brave.com/bsyFCmiUfIbFj9KDqfkkSC74JFaA4wFCCEv3xwbae54/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tLm1l/ZGlhLWFtYXpvbi5j/b20vaW1hZ2VzL0kv/ODF1T0xJSXJzSkwu/anBn",
-    movieName: "IT Chapter One (2017)",
-    director: "Andy Muschietti",
-    starring: "Bill Skarsgard, Jaeden Martell, Sophia Lillis",
-    genres: ["Horror", "Thriller"],
-    quality: "Original HD",
-    language: "Tamil",
-    rating: "7.2/10",
-    lastUpdated: "29 October 2025",
-    links: [
-      { label: "Download 360p", url: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjcmaGFzaD05NmMxYWEzZDE0MjlkODRjYTdkMWNiZTkwOTViNWM2MyZleHA9MTc3OTgxNDU3MSZwYXRoPVRhbWlsIER1YmJlZCBNb3ZpZXMvSVQgKDIwMTcpL0lUIChPcmlnaW5hbCkvSVQgKDM2MHAgSEQpL0lUIDIwMTcgT3JpZ2luYWwgMzYwcCBIRC5tcDQ=", className: "p480" },
-      { label: "Download 720p", url: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjcmaGFzaD1kYzMwMzE5MTMwNzMzNmQ5NTY5MmZhYWI2MzBhNzIwMSZleHA9MTc3OTgxNDU5MSZwYXRoPVRhbWlsIER1YmJlZCBNb3ZpZXMvSVQgKDIwMTcpL0lUIChPcmlnaW5hbCkvSVQgKDcyMHAgSEQpL0lUIDIwMTcgT3JpZ2luYWwgNzIwcCBIRC5tcDQ=", className: "p720" },
-      { label: "Download 1080p", url: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjcmaGFzaD05M2Q5MGZhZWNmMzcwN2MxOGE1OTM0YmRjOWMwZDUyNiZleHA9MTc3OTgxNDYxMiZwYXRoPVRhbWlsIER1YmJlZCBNb3ZpZXMvSVQgKDIwMTcpL0lUIChPcmlnaW5hbCkvSVQgKDEwODBwIEhEKS9JVCAyMDE3IE9yaWdpbmFsIDEwODBwIEhELm1wNA==", className: "p1080" }
-    ],
-    watchUrl: "https://dub.uptodub.ch/download.php?dl=c2VydmVyPWR1YjcmaGFzaD00MGIxZmUzODA4M2M1MjlkYmQzNzMyZDUwYWVkNTgxOSZleHA9MTc3OTg5OTIwNCZwYXRoPVRhbWlsIER1YmJlZCBNb3ZpZXMvSVQgKDIwMTcpL0lUIChPcmlnaW5hbCkvSVQgKDEwODBwIEhEKS9JVCAyMDE3IE9yaWdpbmFsIDEwODBwIEhELm1wNA==&stream=1"
   },
   {
     title: "Justice for Jeni (2026)",
@@ -500,24 +378,6 @@ export const moviesGroup2: Movie[] = [
       { label: "Download 1080p", url: "https://s32.cdnserver04.xyz/Moviesda.Mobi_-_Parasakthi_2026_Uncensored_Version_Original_1080p_HD_(3.3_GB).mp4", className: "p1080" },
     ],
     watchUrl: "https://s34.cdnserver04.xyz/Moviesda.Mobi_-_Parasakthi_2026_Uncensored_Version_Original_1080p_HD_(3.3_GB).mp4?stream=1"
-  },
-  {
-    title: "IPL Indian Penal Law (2025)",
-    image: "https://imgs.search.brave.com/utWCbEgNNs5xwYaB1LsVQdTAmAA7re3Co9pd_LbqjOA/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9hc3Nl/dHMtaW4uYm1zY2Ru/LmNvbS9pZWRiL21v/dmllcy9pbWFnZXMv/bW9iaWxlL3RodW1i/bmFpbC94bGFyZ2Uv/aXBsLWluZGlhbi1w/ZW5hbC1sYXctZXQw/MDQ3MTk5NC0xNzYz/NzIyMTI4LmpwZw",
-    movieName: "IPL Indian Penal Law (2025)",
-    director: "Karunanithi",
-    starring: "TTF Vasan, Kishore Kumar G., Abhirami Gopikumar",
-    genres: ["Crime", "Political", "Thriller"],
-    quality: "Original HD",
-    language: "Tamil",
-    rating: "7.5/10",
-    lastUpdated: "07 February 2026",
-    links: [
-      { label: "Download 360p", url: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPWZkMDM2NzQ3OTJmNDU4YmVjYTE2M2ZiMDI3Y2M4NDViJmV4cD0xNzgwOTAxNjk4JnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvSVBMIEluZGlhbiBQZW5hbCBMYXcgKDIwMjUpL0lQTCBJbmRpYW4gUGVuYWwgTGF3IChPcmlnaW5hbCkvSVBMIEluZGlhbiBQZW5hbCBMYXcgKDM2MHAgSEQpL01vdmllc2RhLk1vYmkgLSBJUEwgSW5kaWFuIFBlbmFsIExhdyAyMDI1IE9yaWdpbmFsIDM2MHAgSEQubXA0", className: "p480" },
-      { label: "Download 720p", url: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPTcwNGQyODZhZWI5Zjc4MmUyN2M1M2M3MWJiNWE5YTVhJmV4cD0xNzgwOTAxNzM4JnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvSVBMIEluZGlhbiBQZW5hbCBMYXcgKDIwMjUpL0lQTCBJbmRpYW4gUGVuYWwgTGF3IChPcmlnaW5hbCkvSVBMIEluZGlhbiBQZW5hbCBMYXcgKDcyMHAgSEQpL01vdmllc2RhLk1vYmkgLSBJUEwgSW5kaWFuIFBlbmFsIExhdyAyMDI1IE9yaWdpbmFsIDcyMHAgSEQubXA0", className: "p720" },
-      { label: "Download 1080p", url: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPTJjOTMxYWQ1ZWIwMWEyNzhiNmY5Mzc1OTVhZTdhNWE1JmV4cD0xNzgwOTAxODQ5JnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvSVBMIEluZGlhbiBQZW5hbCBMYXcgKDIwMjUpL0lQTCBJbmRpYW4gUGVuYWwgTGF3IChPcmlnaW5hbCkvSVBMIEluZGlhbiBQZW5hbCBMYXcgKDEwODBwIEhEKS9Nb3ZpZXNkYS5Nb2JpIC0gSVBMIEluZGlhbiBQZW5hbCBMYXcgMjAyNSBPcmlnaW5hbCAxMDgwcCBIRCAoMy40IEdCKS5tcDQ=", className: "p1080" },
-    ],
-    watchUrl: "https://cdn.uptomkv.ch/download.php?dl=c2VydmVyPW12MSZoYXNoPTc0OTBiM2ZkOGJhOGM1NWYwM2U2ZTBmNmI3MTU0ZTVmJmV4cD0xNzgwOTAxODAyJnBhdGg9VGFtaWwgMjAyNSBNb3ZpZXMvSVBMIEluZGlhbiBQZW5hbCBMYXcgKDIwMjUpL0lQTCBJbmRpYW4gUGVuYWwgTGF3IChPcmlnaW5hbCkvSVBMIEluZGlhbiBQZW5hbCBMYXcgKDcyMHAgSEQpL01vdmllc2RhLk1vYmkgLSBJUEwgSW5kaWFuIFBlbmFsIExhdyAyMDI1IE9yaWdpbmFsIDcyMHAgSEQubXA0&stream=1"
   },
   {
     title: "The Raja Saab (2026)",

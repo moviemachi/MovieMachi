@@ -1403,7 +1403,7 @@ export default function RequestSection({
                       : "text-stone-400 hover:text-stone-100"
                   }`}
                 >
-                  🎬 Movies ({movies.length})
+                  🎬 Movies
                 </button>
                 <button
                   type="button"
@@ -1414,7 +1414,7 @@ export default function RequestSection({
                       : "text-stone-400 hover:text-stone-100"
                   }`}
                 >
-                  📺 Series ({series?.length || 0})
+                  📺 Series
                 </button>
               </div>
 
@@ -1823,7 +1823,7 @@ export default function RequestSection({
             }`}
           >
             <Database size={13} />
-            <span>Public Board ({requests.length})</span>
+            <span>Public Board</span>
           </button>
 
           <button

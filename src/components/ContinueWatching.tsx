@@ -101,7 +101,6 @@ export default function ContinueWatching({ onResumeMovie }: ContinueWatchingProp
           <h3 className="font-display font-black text-white text-lg sm:text-xl uppercase tracking-wider">
             Resume Watching
           </h3>
-          <span className="text-xs text-gray-500 font-mono">({list.length} in progress)</span>
         </div>
 
         <button
