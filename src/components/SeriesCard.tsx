@@ -1,5 +1,5 @@
 import React from "react";
-import { Download, Star, Calendar, User, Film, Heart } from "lucide-react";
+import { Play, Download, Star, Calendar, User, Film, Heart, List } from "lucide-react";
 import { Series } from "../types";
 
 interface SeriesCardProps {
@@ -97,8 +97,8 @@ export default function SeriesCard({
           className="absolute inset-0 bg-black/30 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto cursor-pointer" 
           onClick={() => onOpenEpisodes(series)}
         >
-          <div className="w-10 h-10 xs:w-14 xs:h-14 rounded-full bg-red-650/95 flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:bg-red-500">
-            <Download size={16} className="text-white xs:w-5 xs:h-5" />
+          <div className="w-10 h-10 xs:w-14 xs:h-14 rounded-full bg-red-600/95 flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:bg-red-500">
+            <List size={18} className="text-white xs:w-6 xs:h-6" />
           </div>
         </div>
 

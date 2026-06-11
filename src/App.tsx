@@ -24,6 +24,7 @@ import ContinueWatching from "./components/ContinueWatching";
 import MovieCard from "./components/MovieCard";
 import SeriesCard from "./components/SeriesCard";
 import SeriesEpisodesModal from "./components/SeriesEpisodesModal";
+import MovieDetailsModal from "./components/MovieDetailsModal";
 import MovieVideoPlayer from "./components/MovieVideoPlayer";
 import RequestSection from "./components/RequestSection";
 import { 
@@ -312,9 +313,10 @@ export default function App() {
   };
 
   const handlePlayMovieTitle = (title: string) => {
+    if (!title) return;
     const matchedMovie = movies.find(
-      m => m.movieName.toLowerCase() === title.toLowerCase() ||
-           m.title.toLowerCase().includes(title.toLowerCase())
+      m => (m.movieName && m.movieName.toLowerCase() === title.toLowerCase()) ||
+           (m.title && m.title.toLowerCase().includes(title.toLowerCase()))
     );
     if (matchedMovie) {
       setActivePlayerMovie(matchedMovie);
@@ -322,8 +324,8 @@ export default function App() {
     }
 
     const matchedSeries = series.find(
-      s => s.seriesName.toLowerCase() === title.toLowerCase() ||
-           s.title.toLowerCase().includes(title.toLowerCase())
+      s => (s.seriesName && s.seriesName.toLowerCase() === title.toLowerCase()) ||
+           (s.title && s.title.toLowerCase().includes(title.toLowerCase()))
     );
     if (matchedSeries) {
       setSelectedSeries(matchedSeries);
@@ -338,15 +340,15 @@ export default function App() {
     const ageMs = Date.now() - newest.createdAt;
     if (ageMs < 15000) {
       const match = movies.find(
-        m => m.movieName.toLowerCase() === newest.movieTitle?.toLowerCase() ||
-             m.title.toLowerCase().includes((newest.movieTitle || "").toLowerCase())
+        m => (m.movieName && newest.movieTitle && m.movieName.toLowerCase() === newest.movieTitle.toLowerCase()) ||
+             (m.title && m.title.toLowerCase().includes((newest.movieTitle || "").toLowerCase()))
       );
       if (match) {
         setAvailNotification(match);
       } else {
         const matchS = series.find(
-          s => s.seriesName.toLowerCase() === newest.movieTitle?.toLowerCase() ||
-               s.title.toLowerCase().includes((newest.movieTitle || "").toLowerCase())
+          s => (s.seriesName && newest.movieTitle && s.seriesName.toLowerCase() === newest.movieTitle.toLowerCase()) ||
+               (s.title && s.title.toLowerCase().includes((newest.movieTitle || "").toLowerCase()))
         );
         if (matchS) {
           setAvailNotification({
@@ -375,8 +377,8 @@ export default function App() {
 
     // check if it exists in movie catalog
     const movieExists = movies.some(
-      m => m.movieName.toLowerCase() === formattedMovieName.toLowerCase() ||
-           m.title.toLowerCase() === movieLookupTitle.toLowerCase()
+      m => (m.movieName && m.movieName.toLowerCase() === formattedMovieName.toLowerCase()) ||
+           (m.title && m.title.toLowerCase() === movieLookupTitle.toLowerCase())
     );
 
     if (movieExists) {
@@ -385,12 +387,12 @@ export default function App() {
 
     // check duplicate in request ledger
     const existingReqIdx = requests.findIndex(
-      r => r.movieName.toLowerCase() === formattedMovieName.toLowerCase() &&
+      r => r.movieName && r.movieName.toLowerCase() === formattedMovieName.toLowerCase() &&
            r.year === formattedYear
     );
 
-    // Call Firestore directly
-    submitRequestToFirestore(movieInput, yearInput, languageInput, genreInput, qualityInput, commentsInput, userId, movies)
+    // Call Firestore directly with local requests state to prevent slow duplicate lookups
+    submitRequestToFirestore(movieInput, yearInput, languageInput, genreInput, qualityInput, commentsInput, userId, movies, requests)
       .catch(err => console.error("Error submitting request to Firestore:", err));
 
     if (existingReqIdx > -1) {
@@ -398,8 +400,45 @@ export default function App() {
       if (existingReq.requesters.includes(userId)) {
         return { success: false, error: "already_voted" };
       }
+      
+      const updated = requests.map((r, idx) => {
+        if (idx === existingReqIdx) {
+          const newCount = r.requestCount + 1;
+          const newStatus = (newCount >= 3 && r.status === "Pending") ? ("Under Review" as const) : r.status;
+          return {
+            ...r,
+            requesters: [...r.requesters, userId],
+            requestCount: newCount,
+            status: newStatus
+          };
+        }
+        return r;
+      });
+      setRequests(updated);
+
       return { success: true, action: "upvoted" as const, movieName: formattedMovieName };
     } else {
+      const newId = "REQ_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+      const newReq: CommunityRequest = {
+        id: newId,
+        movieName: formattedMovieName,
+        year: formattedYear,
+        genre: genreInput || "Action",
+        language: languageInput || "Tamil",
+        quality: qualityInput || "1080p",
+        comments: (commentsInput || "").trim(),
+        requesters: [userId],
+        status: "Pending",
+        requestCount: 1,
+        timeAgo: "Just now",
+        createdAt: Date.now(),
+        requesterUserId: userId,
+        requesterUsername: `Peer-${userId.replace("USER_", "")}`,
+        requestedMovieName: formattedMovieName
+      };
+
+      setRequests(prev => [newReq, ...prev]);
+
       return { success: true, action: "created" as const, movieName: formattedMovieName };
     }
   };
@@ -468,6 +507,9 @@ export default function App() {
     };
 
     try {
+      // Optimistically update status to show Uploaded instantly
+      setRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: "Uploaded" as const, uploadedAt: Date.now() } : r));
+
       await saveMovieToFirestore(newMovie);
       await fulfillRequestInFirestore(reqId);
     } catch (err) {
@@ -629,9 +671,9 @@ export default function App() {
 
       // Only notify if this movie was requested/voted by this user in requests list
       const isRequestedByMe = requests.some(r => 
-        r.requesters.includes(userId) && (
+        r.requesters.includes(userId) && r.movieName && newestMovie.movieName && (
           r.movieName.toLowerCase() === newestMovie.movieName.toLowerCase() ||
-          newestMovie.title.toLowerCase().includes(r.movieName.toLowerCase()) ||
+          (newestMovie.title && newestMovie.title.toLowerCase().includes(r.movieName.toLowerCase())) ||
           r.movieName.toLowerCase().includes(newestMovie.movieName.toLowerCase())
         )
       );
@@ -1909,90 +1951,13 @@ export default function App() {
         />
       )}
 
-      {/* Custom High-Fidelity Downloads Ticket Modal Overlay */}
+      {/* Movie Details Modal */}
       {activeDownloadMovie && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-          <div className="relative w-full max-w-md rounded-3xl glass-panel box-glow-red p-4 xs:p-6 space-y-4 xs:space-y-5 max-h-[92vh] overflow-y-auto scrollbar-none flex flex-col">
-            
-            {/* Modal header */}
-            <div className="flex items-start justify-between">
-              <div>
-                <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-widest bg-red-950/40 px-2.5 py-0.5 rounded border border-red-900/30">
-                  Multiple Seeding Mirrors
-                </span>
-                <h3 className="font-display font-black text-lg text-white mt-1.5 tracking-tight line-clamp-1 pr-6 uppercase">
-                  {activeDownloadMovie.movieName}
-                </h3>
-              </div>
-              <button 
-                onClick={() => setActiveDownloadMovie(null)}
-                className="p-1.5 rounded-lg bg-white/5 hover:bg-red-650/40 hover:text-white text-gray-400 transition-colors"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Mirror instructions info */}
-            <div className="p-3 rounded-2xl bg-white/3 border border-white/5 flex items-start gap-2.5">
-              <Info size={16} className="text-blue-400 shrink-0 mt-0.5" />
-              <p className="text-[11px] text-gray-400 leading-relaxed">
-                Direct torrent and file hosting mirrors are listed strictly with their original names and formats preserved. Select a resolution link to launch local download queues.
-              </p>
-            </div>
-
-            {/* List Links wrapper */}
-            <div className="space-y-3">
-              <span className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest block">Available Quality Anchors:</span>
-              
-              <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
-                {activeDownloadMovie.links && activeDownloadMovie.links.length > 0 ? (
-                  activeDownloadMovie.links.map((link, idx) => {
-                    // Match visual styles
-                    const is4k = link.className === "K4" || link.label.toLowerCase().includes("4k");
-                    const is1080 = link.className === "p1080" || link.label.toLocaleLowerCase().includes("1080p");
-                    const is720 = link.className === "p720" || link.label.toLowerCase().includes("720p");
-
-                    return (
-                      <a
-                        key={idx}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`w-full py-3.5 px-4 rounded-2xl border text-xs sm:text-sm font-semibold flex items-center justify-between transition-all hover:-translate-y-0.5 cursor-pointer ${
-                          is4k
-                            ? "bg-amber-500/10 hover:bg-amber-500/15 text-amber-300 border-amber-500/30 hover:shadow-[0_0_15px_rgba(245,158,11,0.2)]"
-                            : is1080
-                            ? "bg-red-600/10 hover:bg-red-600/15 text-red-400 border-red-500/30 hover:shadow-[0_0_15px_rgba(239,68,68,0.2)]"
-                            : is720
-                            ? "bg-blue-600/10 hover:bg-blue-600/15 text-blue-400 border-blue-500/30"
-                            : "bg-white/4 hover:bg-white/8 text-gray-200 border-white/5"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Download size={15} />
-                          <span>{link.label}</span>
-                        </div>
-                        <span className="text-[10px] font-mono uppercase bg-black/40 px-2 py-0.5 rounded text-gray-400 border border-white/5 select-none">
-                          {link.className || "Link"}
-                        </span>
-                      </a>
-                    );
-                  })
-                ) : (
-                  <div className="py-8 text-center text-xs text-gray-500 bg-white/2 rounded-2xl border border-white/5">
-                    No individual quality anchors available. Please use Watch Online link to stream dynamic resolutions.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Footer warning */}
-            <div className="pt-2 text-center text-[10px] text-gray-550 select-none">
-              Secured SSL Seeding mirrors • Verified Zero Viruses
-            </div>
-
-          </div>
-        </div>
+        <MovieDetailsModal
+          movie={activeDownloadMovie}
+          onClose={() => setActiveDownloadMovie(null)}
+          onWatch={setActivePlayerMovie}
+        />
       )}
 
       {/* Premium Glassmorphic Sort By Modal */}

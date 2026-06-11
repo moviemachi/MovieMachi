@@ -1939,8 +1939,8 @@ export default function RequestSection({
                                   <button
                                     onClick={() => {
                                       const matched = movies.find(
-                                        m => m.movieName.toLowerCase() === r.movieName.toLowerCase() ||
-                                             m.title.toLowerCase().includes(r.movieName.toLowerCase())
+                                        m => (m.movieName && r.movieName && m.movieName.toLowerCase() === r.movieName.toLowerCase()) ||
+                                             (m.title && r.movieName && m.title.toLowerCase().includes(r.movieName.toLowerCase()))
                                       );
                                       if (matched) {
                                         setActivePlayerMovie(matched);

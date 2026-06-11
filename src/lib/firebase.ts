@@ -253,7 +253,11 @@ export async function fetchAllRequestsFromFirestore(): Promise<CommunityRequest[
     const querySnapshot = await getDocs(collection(db, path));
     const items: CommunityRequest[] = [];
     querySnapshot.forEach((document) => {
-      items.push(document.data() as CommunityRequest);
+      const data = document.data() as any;
+      items.push({
+        ...data,
+        id: document.id
+      } as CommunityRequest);
     });
     // Default sorting: highest counts first, then newest
     return items.sort((a, b) => {
@@ -301,7 +305,7 @@ export async function autoFulfillMatchingRequests(movieName: string): Promise<vo
       if (r.requesters && r.requesters.length > 0) {
         for (const uid of r.requesters) {
           const notifId = `NOTIF_${r.id}_${uid}`;
-          const notifMsg = `🎬 Your requested movie "${r.movieName}" is now available.`;
+          const notifMsg = `Your requested title '${r.movieName}' is now available.`;
           const notificationData = {
             id: notifId,
             userId: uid,
@@ -416,7 +420,8 @@ export async function submitRequestToFirestore(
   qualityInput: string,
   commentsInput: string,
   userId: string,
-  currentMovies: Movie[]
+  currentMovies: Movie[],
+  currentRequests: CommunityRequest[] = []
 ): Promise<{ success: boolean; error?: string; action?: "created" | "upvoted"; movieName?: string }> {
   const movieName = movieInput.trim();
   const year = yearInput ? yearInput.trim() : new Date().getFullYear().toString();
@@ -434,7 +439,9 @@ export async function submitRequestToFirestore(
 
   const path = "requests";
   try {
-    const list = await fetchAllRequestsFromFirestore();
+    const list = currentRequests && currentRequests.length > 0
+      ? currentRequests
+      : await fetchAllRequestsFromFirestore();
     const existingReqIdx = list.findIndex(
       r => r.movieName.toLowerCase() === movieName.toLowerCase() && r.year === year
     );
@@ -538,7 +545,7 @@ export async function fulfillRequestInFirestore(reqId: string): Promise<void> {
       if (r.requesters && r.requesters.length > 0) {
         for (const uid of r.requesters) {
           const notifId = `NOTIF_${r.id}_${uid}`;
-          const notifMsg = `🎬 Your requested movie "${r.movieName}" is now available.`;
+          const notifMsg = `Your requested title '${r.movieName}' is now available.`;
           const notificationData = {
             id: notifId,
             userId: uid,
