@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { allMovies } from "./data/all_movies";
-import { Movie, CommunityRequest, Series } from "./types";
+import { Movie, CommunityRequest, Series, AppNotification } from "./types";
 import { 
   seedMoviesIfEmpty, 
   fetchAllMoviesFromFirestore, 
@@ -13,13 +13,17 @@ import {
   fulfillRequestInFirestore,
   fetchAllSeriesFromFirestore,
   saveSeriesToFirestore,
-  deleteSeriesFromFirestore
+  deleteSeriesFromFirestore,
+  markNotificationAsReadInFirestore,
+  deleteNotificationFromFirestore
 } from "./lib/firebase";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import BackgroundAurora from "./components/BackgroundAurora";
 import Header from "./components/Header";
 import ContinueWatching from "./components/ContinueWatching";
 import MovieCard from "./components/MovieCard";
+import SeriesCard from "./components/SeriesCard";
+import SeriesEpisodesModal from "./components/SeriesEpisodesModal";
 import MovieVideoPlayer from "./components/MovieVideoPlayer";
 import RequestSection from "./components/RequestSection";
 import { 
@@ -57,7 +61,14 @@ export default function App() {
     }
   });
 
-  const [series, setSeries] = useState<Series[]>([]);
+  const [series, setSeries] = useState<Series[]>(() => {
+    try {
+      const saved = localStorage.getItem("moviemachi_series_catalog");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Persistent User Anonymous identifier
   const [userId, setUserId] = useState<string>(() => {
@@ -74,7 +85,24 @@ export default function App() {
   });
 
   // Persistent user & community tickets requests database
-  const [requests, setRequests] = useState<CommunityRequest[]>([]);
+  const [requests, setRequests] = useState<CommunityRequest[]>(() => {
+    try {
+      const saved = localStorage.getItem("moviemachi_requests_ledger");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Persistent real-time notifications from Firestore
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    try {
+      const saved = localStorage.getItem("moviemachi_notifications_ledger");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Movie available instant alert banner state
   const [availNotification, setAvailNotification] = useState<Movie | null>(null);
@@ -91,26 +119,44 @@ export default function App() {
   // Load and sync movies and requests from Firebase Firestore in Real-Time
   useEffect(() => {
     // Seed first if empty
-    seedMoviesIfEmpty().then(() => {
-      // Fetch movies directly from Firestore to initialize state immediately
-      fetchAllMoviesFromFirestore().then((initialMovies) => {
-        if (initialMovies && initialMovies.length > 0) {
-          setMovies(initialMovies);
-        }
+    seedMoviesIfEmpty()
+      .then(() => {
+        // Fetch movies directly from Firestore to initialize state immediately
+        fetchAllMoviesFromFirestore()
+          .then((initialMovies) => {
+            if (initialMovies && initialMovies.length > 0) {
+              setMovies(initialMovies);
+            }
+          })
+          .catch((err) => {
+            console.warn("[Firebase] Offline fallback for movies catalog:", err);
+          });
+
+        // Fetch requests from Firestore to initialize state immediately
+        fetchAllRequestsFromFirestore()
+          .then((initialRequests) => {
+            if (initialRequests && initialRequests.length > 0) {
+              setRequests(initialRequests);
+            }
+          })
+          .catch((err) => {
+            console.warn("[Firebase] Offline fallback for requests ledger:", err);
+          });
+
+        // Fetch series from Firestore
+        fetchAllSeriesFromFirestore()
+          .then((initialSeries) => {
+            if (initialSeries && initialSeries.length > 0) {
+              setSeries(initialSeries);
+            }
+          })
+          .catch((err) => {
+            console.warn("[Firebase] Offline fallback for series catalog:", err);
+          });
+      })
+      .catch((err) => {
+        console.warn("[Firebase] Offline fallback overall startup routine failed:", err);
       });
-      // Fetch requests from Firestore to initialize state immediately
-      fetchAllRequestsFromFirestore().then((initialRequests) => {
-        if (initialRequests && initialRequests.length > 0) {
-          setRequests(initialRequests);
-        }
-      });
-      // Fetch series from Firestore
-      fetchAllSeriesFromFirestore().then((initialSeries) => {
-        if (initialSeries && initialSeries.length > 0) {
-          setSeries(initialSeries);
-        }
-      });
-    });
 
     // 1. Set up active real-time subscription for movies collection
     const unsubMovies = onSnapshot(collection(db, "movies"), (snapshot) => {
@@ -133,7 +179,11 @@ export default function App() {
     const unsubRequests = onSnapshot(collection(db, "requests"), (snapshot) => {
       const list: CommunityRequest[] = [];
       snapshot.forEach((document) => {
-        list.push(document.data() as CommunityRequest);
+        const data = document.data() as CommunityRequest;
+        list.push({
+          ...data,
+          id: document.id
+        });
       });
       // Sort highest request count first, then by creation date
       list.sort((a, b) => {
@@ -163,40 +213,136 @@ export default function App() {
       console.error("Series onSnapshot error:", error);
     });
 
+    // 4. Set up active real-time subscription for notifications collection matching current userId
+    const qNotifs = query(collection(db, "notifications"), where("userId", "==", userId));
+    const unsubNotifs = onSnapshot(qNotifs, (snapshot) => {
+      const list: AppNotification[] = [];
+      snapshot.forEach((document) => {
+        list.push({
+          ...document.data(),
+          id: document.id
+        } as AppNotification);
+      });
+      // Sort newest first
+      list.sort((a, b) => b.createdAt - a.createdAt);
+      setNotifications(list);
+    }, (error) => {
+      console.error("Notifications onSnapshot error:", error);
+    });
+
     return () => {
       unsubMovies();
       unsubRequests();
       unsubSeries();
+      unsubNotifs();
     };
-  }, []);
+  }, [userId]);
 
-  // Automated detection of movie availability & notification trigger for requesting users
+  // Synchronize state changes to localStorage for an incredibly robust, zero-lag offline experience
   useEffect(() => {
     try {
-      const dismissedRaw = localStorage.getItem("moviemachi_dismissed_notifications");
-      const dismissed: string[] = dismissedRaw ? JSON.parse(dismissedRaw) : [];
-      
-      const uploadedRequests = requests.filter(r => r.status === "Uploaded");
-      for (const r of uploadedRequests) {
-        if (r.requesters.includes(userId)) {
-          if (!dismissed.includes(r.id)) {
-            const matchedMovie = movies.find(
-              m => m.movieName.toLowerCase() === r.movieName.toLowerCase() ||
-                   m.title.toLowerCase().includes(r.movieName.toLowerCase())
-            );
-            if (matchedMovie) {
-              setAvailNotification(matchedMovie);
-              const updatedDismissed = [...dismissed, r.id];
-              localStorage.setItem("moviemachi_dismissed_notifications", JSON.stringify(updatedDismissed));
-              break;
-            }
-          }
+      localStorage.setItem("moviemachi_active_catalog", JSON.stringify(movies));
+    } catch (e) {
+      console.warn("Failed to cache movies in local-first storage:", e);
+    }
+  }, [movies]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("moviemachi_series_catalog", JSON.stringify(series));
+    } catch (e) {
+      console.warn("Failed to cache series in local-first storage:", e);
+    }
+  }, [series]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("moviemachi_requests_ledger", JSON.stringify(requests));
+    } catch (e) {
+      console.warn("Failed to cache requests in local-first storage:", e);
+    }
+  }, [requests]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("moviemachi_notifications_ledger", JSON.stringify(notifications));
+    } catch (e) {
+      console.warn("Failed to cache notifications in local-first storage:", e);
+    }
+  }, [notifications]);
+
+  // Notification interactions and actions
+  const handleMarkNotificationRead = async (id: string) => {
+    try {
+      await markNotificationAsReadInFirestore(id);
+    } catch (e) {
+      console.error("Error marking notification as read:", e);
+    }
+  };
+
+  const handleDismissNotification = async (id: string) => {
+    try {
+      await deleteNotificationFromFirestore(id);
+    } catch (e) {
+      console.error("Error dismissing notification:", e);
+    }
+  };
+
+  const handlePlayMovieTitle = (title: string) => {
+    const matchedMovie = movies.find(
+      m => m.movieName.toLowerCase() === title.toLowerCase() ||
+           m.title.toLowerCase().includes(title.toLowerCase())
+    );
+    if (matchedMovie) {
+      setActivePlayerMovie(matchedMovie);
+      return;
+    }
+
+    const matchedSeries = series.find(
+      s => s.seriesName.toLowerCase() === title.toLowerCase() ||
+           s.title.toLowerCase().includes(title.toLowerCase())
+    );
+    if (matchedSeries) {
+      setSelectedSeries(matchedSeries);
+    }
+  };
+
+  // Real-time toast bridge for incoming unread notifications
+  useEffect(() => {
+    const unread = notifications.filter(n => !n.isRead);
+    if (unread.length === 0) return;
+    const newest = unread[0];
+    const ageMs = Date.now() - newest.createdAt;
+    if (ageMs < 15000) {
+      const match = movies.find(
+        m => m.movieName.toLowerCase() === newest.movieTitle?.toLowerCase() ||
+             m.title.toLowerCase().includes((newest.movieTitle || "").toLowerCase())
+      );
+      if (match) {
+        setAvailNotification(match);
+      } else {
+        const matchS = series.find(
+          s => s.seriesName.toLowerCase() === newest.movieTitle?.toLowerCase() ||
+               s.title.toLowerCase().includes((newest.movieTitle || "").toLowerCase())
+        );
+        if (matchS) {
+          setAvailNotification({
+            title: matchS.title,
+            image: matchS.image,
+            movieName: matchS.seriesName,
+            director: matchS.director,
+            starring: matchS.starring,
+            genres: matchS.genres,
+            quality: matchS.quality,
+            language: matchS.language,
+            rating: matchS.rating,
+            lastUpdated: matchS.lastUpdated,
+            links: []
+          });
         }
       }
-    } catch (e) {
-      console.error("Error checking movie notifications:", e);
     }
-  }, [userId, requests, movies]);
+  }, [notifications, movies, series]);
 
   // Handle request ticket creation/upvoting
   const handleAddRequest = (movieInput: string, yearInput: string, languageInput: string, genreInput: string, qualityInput: string, commentsInput: string): { success: boolean; error?: string; action?: "created" | "upvoted"; movieName?: string } => {
@@ -206,8 +352,8 @@ export default function App() {
 
     // check if it exists in movie catalog
     const movieExists = movies.some(
-      m => m.movieName.toLowerCase() === formattedMovieName.toLowerCase() ||
-           m.title.toLowerCase() === movieLookupTitle.toLowerCase()
+      m => (m.movieName || "").toLowerCase() === formattedMovieName.toLowerCase() ||
+           (m.title || "").toLowerCase() === movieLookupTitle.toLowerCase()
     );
 
     if (movieExists) {
@@ -216,7 +362,7 @@ export default function App() {
 
     // check duplicate in request ledger
     const existingReqIdx = requests.findIndex(
-      r => r.movieName.toLowerCase() === formattedMovieName.toLowerCase() &&
+      r => (r.movieName || "").toLowerCase() === formattedMovieName.toLowerCase() &&
            r.year === formattedYear
     );
 
@@ -567,6 +713,37 @@ export default function App() {
   const [activePlayerMovie, setActivePlayerMovie] = useState<Movie | null>(null);
   const [activeDownloadMovie, setActiveDownloadMovie] = useState<Movie | null>(null);
   const [activeTrailerMovie, setActiveTrailerMovie] = useState<Movie | null>(null);
+  const [selectedSeries, setSelectedSeries] = useState<Series | Movie | null>(null);
+
+  const handlePlayEpisode = (seriesItem: Series, episodeNum: number) => {
+    const episodeObj = seriesItem.episodes?.find(ep => (ep.episodeNumber === episodeNum || ep.episode === episodeNum));
+    if (episodeObj && episodeObj.downloadUrl) {
+      const url = episodeObj.downloadUrl;
+      const virtualMovie: Movie = {
+        id: `${seriesItem.id}_E${episodeNum}`,
+        title: `${seriesItem.seriesName} - Season ${seriesItem.seasonNumber} - Episode ${episodeNum}`,
+        movieName: `${seriesItem.seriesName} - S${seriesItem.seasonNumber}E${episodeNum}`,
+        image: seriesItem.image,
+        director: seriesItem.director,
+        starring: seriesItem.starring,
+        genres: seriesItem.genres,
+        language: seriesItem.language,
+        quality: seriesItem.quality,
+        rating: seriesItem.rating,
+        lastUpdated: seriesItem.lastUpdated,
+        watchUrl: url,
+        links: []
+      };
+      setActivePlayerMovie(virtualMovie);
+    }
+  };
+
+  const handleDownloadEpisode = (seriesItem: Series, episodeNum: number) => {
+    const episodeObj = seriesItem.episodes?.find(ep => (ep.episodeNumber === episodeNum || ep.episode === episodeNum));
+    if (episodeObj && episodeObj.downloadUrl) {
+      window.open(episodeObj.downloadUrl, "_blank");
+    }
+  };
 
   // Handle ESC keypress to close trailer modal
   useEffect(() => {
@@ -602,31 +779,49 @@ export default function App() {
     }
   };
 
+  const allMediaItems = useMemo(() => {
+    const mappedMovies = movies.map(m => ({ ...m, type: "movie" as const }));
+    const mappedSeries = series.map(s => ({
+      ...s,
+      type: "series" as const,
+      movieName: s.seriesName || s.title || "",
+      title: s.title || s.seriesName || ""
+    }));
+    return [...mappedMovies, ...mappedSeries];
+  }, [movies, series]);
+
   // Extract list of all unique genres in data catalog to auto-generate filter capsules
   const [genreOptions, setGenreOptions] = useState<string[]>([]);
   useEffect(() => {
     const genresSet = new Set<string>();
-    movies.forEach(m => {
+    allMediaItems.forEach(m => {
       if (m.genres) {
         m.genres.forEach(g => genresSet.add(g));
       }
     });
     setGenreOptions(["All Genres", ...Array.from(genresSet)]);
-  }, [movies]);
+  }, [allMediaItems]);
 
   // Filter & Search logic
-  const filteredMovies = movies.filter(movie => {
+  const filteredMovies = allMediaItems.filter(item => {
     // If activeTab is watchlist, filter by watchlist first
-    if (activeTab === "watchlist" && !watchlist.includes(movie.title)) {
+    if (activeTab === "watchlist" && !watchlist.includes(item.title)) {
       return false;
     }
 
     // Search input match
-    const stringToSearch = `${movie.title} ${movie.director || ""} ${movie.starring || ""} ${(movie.genres || []).join(" ")}`.toLowerCase();
+    const titleVal = item.title || "";
+    const nameVal = (item.type === "series" ? (item as any).seriesName : (item as any).movieName) || "";
+    const directorVal = item.director || "";
+    const genreVal = (item.genres || []).join(" ");
+    const languageVal = item.language || "";
+    const starringVal = item.starring || "";
+
+    const stringToSearch = `${titleVal} ${nameVal} ${directorVal} ${genreVal} ${languageVal} ${starringVal}`.toLowerCase();
     const queryMatch = stringToSearch.includes(searchQuery.toLowerCase());
 
     // Genre badge match
-    const genreMatch = selectedGenre === "All Genres" || (movie.genres && movie.genres.includes(selectedGenre));
+    const genreMatch = selectedGenre === "All Genres" || (item.genres && item.genres.includes(selectedGenre));
 
     return queryMatch && genreMatch;
   });
@@ -839,7 +1034,7 @@ export default function App() {
     }
   };
 
-  const latestMovies = [...movies]
+  const latestMovies = [...allMediaItems]
     .sort((a, b) => parseDateForSlider(b.lastUpdated) - parseDateForSlider(a.lastUpdated))
     .slice(0, 5);
 
@@ -896,9 +1091,13 @@ export default function App() {
         onSearchChange={setSearchQuery}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        totalCount={movies.length}
+        totalCount={allMediaItems.length}
         theme={theme}
         onThemeToggle={toggleTheme}
+        notifications={notifications}
+        onMarkNotificationRead={handleMarkNotificationRead}
+        onDismissNotification={handleDismissNotification}
+        onPlayMovieTitle={handlePlayMovieTitle}
       />
 
       {/* Smart TV Overlay banner */}
@@ -1003,31 +1202,46 @@ export default function App() {
                         </p>
 
                         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1 sm:pt-2">
-                          {hasWatchUrl && (
+                          {slide.type === "series" ? (
                             <button 
                               onClick={() => {
                                 handleSlideInteraction();
-                                setActivePlayerMovie(slide);
+                                setSelectedSeries(slide as any);
                               }}
                               className="h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-red-650 hover:bg-red-550 border border-red-500/20 text-white font-display font-bold text-[9px] xs:text-[11px] sm:text-sm flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(239,68,68,0.35)]"
                             >
                               <Play size={11} fill="currentColor" className="xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
-                              <span>Watch Online</span>
+                              <span>Select Episodes</span>
                             </button>
-                          )}
+                          ) : (
+                            <>
+                              {hasWatchUrl && (
+                                <button 
+                                  onClick={() => {
+                                    handleSlideInteraction();
+                                    setActivePlayerMovie(slide);
+                                  }}
+                                  className="h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-red-650 hover:bg-red-550 border border-red-500/20 text-white font-display font-bold text-[9px] xs:text-[11px] sm:text-sm flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(239,68,68,0.35)]"
+                                >
+                                  <Play size={11} fill="currentColor" className="xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
+                                  <span>Watch Online</span>
+                                </button>
+                              )}
 
-                          <button 
-                            onClick={() => {
-                              handleSlideInteraction();
-                              setActiveDownloadMovie(slide);
-                            }}
-                            className={`h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-white/5 hover:bg-white/10 text-gray-200 font-display font-bold text-[9px] xs:text-[11px] sm:text-sm border border-white/10 flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer ${
-                              !hasWatchUrl ? "shadow-[0_0_20px_rgba(239,68,68,0.25)] bg-red-650 hover:bg-red-550 border border-red-500/20 text-white" : ""
-                            }`}
-                          >
-                            <Download size={11} className="xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
-                            <span>Downloads</span>
-                          </button>
+                              <button 
+                                onClick={() => {
+                                  handleSlideInteraction();
+                                  setSelectedSeries(slide);
+                                }}
+                                className={`h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-white/5 hover:bg-white/10 text-gray-200 font-display font-bold text-[9px] xs:text-[11px] sm:text-sm border border-white/10 flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer ${
+                                  !hasWatchUrl ? "shadow-[0_0_20px_rgba(239,68,68,0.25)] bg-red-650 hover:bg-red-550 border border-red-500/20 text-white" : ""
+                                }`}
+                              >
+                                <Download size={11} className="xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
+                                <span>Downloads</span>
+                              </button>
+                            </>
+                          )}
 
                           <button 
                             onClick={() => {
@@ -1177,15 +1391,25 @@ export default function App() {
                 <div className="space-y-8">
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                     {paginatedMovies.map((movie, movieIdx) => (
-                      <MovieCard
-                        key={`${movie.title}-${movieIdx}`}
-                        movie={movie}
-                        onWatch={setActivePlayerMovie}
-                        onDownload={setActiveDownloadMovie}
-                        isFavorite={watchlist.includes(movie.title)}
-                        onToggleFavorite={handleToggleWatchlist}
-                        onPlayTrailer={setActiveTrailerMovie}
-                      />
+                      movie.type === "series" ? (
+                        <SeriesCard
+                          key={`${movie.title}-${movieIdx}`}
+                          series={movie as unknown as Series}
+                          onOpenEpisodes={(s) => setSelectedSeries(s)}
+                          isFavorite={watchlist.includes(movie.title)}
+                          onToggleFavorite={(s) => handleToggleWatchlist(s as unknown as Movie)}
+                        />
+                      ) : (
+                        <MovieCard
+                          key={`${movie.title}-${movieIdx}`}
+                          movie={movie as Movie}
+                          onWatch={setActivePlayerMovie}
+                          onDownload={setSelectedSeries}
+                          isFavorite={watchlist.includes(movie.title)}
+                          onToggleFavorite={handleToggleWatchlist}
+                          onPlayTrailer={setActiveTrailerMovie}
+                        />
+                      )
                     ))}
                   </div>
 
@@ -1437,15 +1661,25 @@ export default function App() {
                   <div className="space-y-8 animate-fade-in">
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                       {paginatedMovies.map((movie, movieIdx) => (
-                        <MovieCard
-                          key={`${movie.title}-${movieIdx}`}
-                          movie={movie}
-                          onWatch={setActivePlayerMovie}
-                          onDownload={setActiveDownloadMovie}
-                          isFavorite={watchlist.includes(movie.title)}
-                          onToggleFavorite={handleToggleWatchlist}
-                          onPlayTrailer={setActiveTrailerMovie}
-                        />
+                        movie.type === "series" ? (
+                          <SeriesCard
+                            key={`${movie.title}-${movieIdx}`}
+                            series={movie as unknown as Series}
+                            onOpenEpisodes={(s) => setSelectedSeries(s)}
+                            isFavorite={watchlist.includes(movie.title)}
+                            onToggleFavorite={(s) => handleToggleWatchlist(s as unknown as Movie)}
+                          />
+                        ) : (
+                          <MovieCard
+                            key={`${movie.title}-${movieIdx}`}
+                            movie={movie as Movie}
+                            onWatch={setActivePlayerMovie}
+                            onDownload={setSelectedSeries}
+                            isFavorite={watchlist.includes(movie.title)}
+                            onToggleFavorite={handleToggleWatchlist}
+                            onPlayTrailer={setActiveTrailerMovie}
+                          />
+                        )
                       ))}
                     </div>
 
@@ -1632,6 +1866,17 @@ export default function App() {
         />
       )}
 
+      {/* Series Episodes Modal */}
+      {selectedSeries && (
+        <SeriesEpisodesModal
+          series={selectedSeries}
+          onClose={() => setSelectedSeries(null)}
+          onPlayEpisode={handlePlayEpisode}
+          onDownloadEpisode={handleDownloadEpisode}
+          onWatchMovie={setActivePlayerMovie}
+        />
+      )}
+
       {/* Custom High-Fidelity Downloads Ticket Modal Overlay */}
       {activeDownloadMovie && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
@@ -1671,9 +1916,10 @@ export default function App() {
                 {activeDownloadMovie.links && activeDownloadMovie.links.length > 0 ? (
                   activeDownloadMovie.links.map((link, idx) => {
                     // Match visual styles
-                    const is4k = link.className === "K4" || link.label.toLowerCase().includes("4k");
-                    const is1080 = link.className === "p1080" || link.label.toLocaleLowerCase().includes("1080p");
-                    const is720 = link.className === "p720" || link.label.toLowerCase().includes("720p");
+                    const labelStr = link.label || "";
+                    const is4k = link.className === "K4" || labelStr.toLowerCase().includes("4k");
+                    const is1080 = link.className === "p1080" || labelStr.toLowerCase().includes("1080p");
+                    const is720 = link.className === "p720" || labelStr.toLowerCase().includes("720p");
 
                     return (
                       <a

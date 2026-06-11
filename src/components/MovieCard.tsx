@@ -97,19 +97,11 @@ export default function MovieCard({
         <div 
           className="absolute inset-0 bg-black/30 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto cursor-pointer" 
           onClick={() => {
-            if (movie.watchUrl && movie.watchUrl.trim() !== "") {
-              onWatch(movie);
-            } else {
-              onDownload(movie);
-            }
+            onDownload(movie);
           }}
         >
-          <div className="w-10 h-10 xs:w-14 xs:h-14 rounded-full bg-red-600/95 flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:bg-red-500">
-            {movie.watchUrl && movie.watchUrl.trim() !== "" ? (
-              <Play size={16} fill="currentColor" className="ml-1 xs:w-5 xs:h-5" />
-            ) : (
-              <Download size={16} className="text-white xs:w-5 xs:h-5" />
-            )}
+          <div className="w-10 h-10 xs:w-14 xs:h-14 rounded-full bg-red-650/95 flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:bg-red-500">
+            <Download size={16} className="text-white xs:w-5 xs:h-5" />
           </div>
         </div>
 
@@ -122,11 +114,7 @@ export default function MovieCard({
         <div>
           <h4 
             onClick={() => {
-              if (movie.watchUrl && movie.watchUrl.trim() !== "") {
-                onWatch(movie);
-              } else {
-                onDownload(movie);
-              }
+              onDownload(movie);
             }}
             className="font-display font-medium text-xs xs:text-sm sm:text-base text-white hover:text-red-400 transition-colors cursor-pointer line-clamp-1 truncate"
           >

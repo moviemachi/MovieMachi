@@ -14,7 +14,7 @@ import {
   deleteDoc, 
   getDocFromServer
 } from "firebase/firestore";
-import { Movie, CommunityRequest, Series, SeriesEpisode } from "../types";
+import { Movie, CommunityRequest, Series, SeriesEpisode, AppNotification } from "../types";
 import { allMovies } from "../data/all_movies";
 
 const firebaseConfig = {
@@ -50,8 +50,18 @@ interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  
+  const isOffline = 
+    errorMessage.toLowerCase().includes("offline") || 
+    errorMessage.toLowerCase().includes("could not reach") ||
+    errorMessage.toLowerCase().includes("failed to get document") ||
+    errorMessage.toLowerCase().includes("unavailable") ||
+    errorMessage.toLowerCase().includes("network") ||
+    errorMessage.toLowerCase().includes("timeout");
+
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errorMessage,
     authInfo: {
       userId: "anonymous_machi_peer",
       email: null
@@ -59,6 +69,13 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   };
+
+  if (isOffline) {
+    console.warn("[Firebase Connection Offline]: Operating in local-first/cached fallback mode. Detailed ledger:", JSON.stringify(errInfo));
+    // Do not throw for offline/network connectivity states to allow seamless local-first fallback operation without crashing
+    return;
+  }
+
   console.error("Firestore Error Detailed Ledger:", JSON.stringify(errInfo));
   throw new Error(JSON.stringify(errInfo));
 }
@@ -137,8 +154,11 @@ async function testConnection() {
   try {
     await getDocFromServer(doc(db, "test", "connection"));
   } catch (error) {
-    if (error instanceof Error && error.message.includes("the client is offline")) {
-      console.error("Please check your Firebase configuration or internet connectivity.", error);
+    const msg = error instanceof Error ? error.message : String(error);
+    if (msg.toLowerCase().includes("offline") || msg.toLowerCase().includes("could not reach")) {
+      console.warn("Please check your Firebase configuration or internet connectivity. Operating in persistent local-first mode.", error);
+    } else {
+      console.warn("Firestore connection check status update:", error);
     }
   }
 }
@@ -197,7 +217,11 @@ export async function fetchAllRequestsFromFirestore(): Promise<CommunityRequest[
     const querySnapshot = await getDocs(collection(db, path));
     const items: CommunityRequest[] = [];
     querySnapshot.forEach((document) => {
-      items.push(document.data() as CommunityRequest);
+      const data = document.data();
+      items.push({
+        ...data,
+        id: document.id
+      } as CommunityRequest);
     });
     // Default sorting: highest counts first, then newest
     return items.sort((a, b) => {
@@ -221,10 +245,12 @@ export async function autoFulfillMatchingRequests(movieName: string): Promise<vo
     const querySnapshot = await getDocs(collection(db, path));
     const requestsToUpdate: CommunityRequest[] = [];
     querySnapshot.forEach((document) => {
-      const r = document.data() as CommunityRequest;
-      if (r.status !== "Uploaded" && (
+      const data = document.data();
+      const r = { ...data, id: document.id } as CommunityRequest;
+      if (r.status !== "Uploaded" && r.movieName && (
         r.movieName.toLowerCase() === movieName.toLowerCase() ||
-        movieName.toLowerCase().includes(r.movieName.toLowerCase())
+        movieName.toLowerCase().includes(r.movieName.toLowerCase()) ||
+        r.movieName.toLowerCase().includes(movieName.toLowerCase())
       )) {
         requestsToUpdate.push({
           ...r,
@@ -234,8 +260,26 @@ export async function autoFulfillMatchingRequests(movieName: string): Promise<vo
     });
 
     for (const r of requestsToUpdate) {
+      if (!r.id) continue;
       const sanitized = sanitizeRequestData(r);
       await setDoc(doc(db, path, r.id), sanitized);
+
+      // Create persistent notifications in Firestore for each user who requested this movie
+      if (r.requesters && r.requesters.length > 0) {
+        for (const uid of r.requesters) {
+          const notifId = `NOTIF_${r.id}_${uid}`;
+          const notifMsg = `Your requested movie ${r.movieName} is now available.`;
+          const notificationData = {
+            id: notifId,
+            userId: uid,
+            message: notifMsg,
+            isRead: false,
+            createdAt: Date.now(),
+            movieTitle: r.movieName
+          };
+          await setDoc(doc(db, "notifications", notifId), notificationData);
+        }
+      }
     }
   } catch (err) {
     console.error("[Firebase] Error auto-fulfilling matching requests:", err);
@@ -359,7 +403,7 @@ export async function submitRequestToFirestore(
   try {
     const list = await fetchAllRequestsFromFirestore();
     const existingReqIdx = list.findIndex(
-      r => r.movieName.toLowerCase() === movieName.toLowerCase() && r.year === year
+      r => (r.movieName || "").toLowerCase() === movieName.toLowerCase() && r.year === year
     );
 
     if (existingReqIdx > -1) {
@@ -452,8 +496,50 @@ export async function fulfillRequestInFirestore(reqId: string): Promise<void> {
       };
       const sanitized = sanitizeRequestData(updated);
       await setDoc(docRef, sanitized);
+
+      // Create a persistent notification for every requester when manually fulfilled
+      if (r.requesters && r.requesters.length > 0) {
+        for (const uid of r.requesters) {
+          const notifId = `NOTIF_${r.id}_${uid}`;
+          const notifMsg = `Your requested movie ${r.movieName} is now available.`;
+          const notificationData = {
+            id: notifId,
+            userId: uid,
+            message: notifMsg,
+            isRead: false,
+            createdAt: Date.now(),
+            movieTitle: r.movieName
+          };
+          await setDoc(doc(db, "notifications", notifId), notificationData);
+        }
+      }
     }
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+/**
+ * Mark a notification as read in Firestore
+ */
+export async function markNotificationAsReadInFirestore(notifId: string): Promise<void> {
+  const path = `notifications/${notifId}`;
+  try {
+    const docRef = doc(db, "notifications", notifId);
+    await setDoc(docRef, { isRead: true }, { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+/**
+ * Delete/Dismiss a notification from Firestore
+ */
+export async function deleteNotificationFromFirestore(notifId: string): Promise<void> {
+  const path = `notifications/${notifId}`;
+  try {
+    await deleteDoc(doc(db, "notifications", notifId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
   }
 }

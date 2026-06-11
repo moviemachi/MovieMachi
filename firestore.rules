@@ -13,5 +13,23 @@ service cloud.firestore {
       // Admin client performs writes, updates, and deletes
       allow write: if true;
     }
+
+    // Requests collection rules
+    match /requests/{requestId} {
+      // General viewers can read/write requests ledger
+      allow read, write: if true;
+    }
+
+    // Series collection rules
+    match /series/{seriesId} {
+      // General viewers can read/write series catalog
+      allow read, write: if true;
+    }
+
+    // Notifications collection rules
+    match /notifications/{notificationId} {
+      // General viewers can read/write their notifications
+      allow read, write: if true;
+    }
   }
 }

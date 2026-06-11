@@ -1,5 +1,5 @@
 import React from "react";
-import { Play, Download, Star, Calendar, User, Film, Heart, List } from "lucide-react";
+import { Download, Star, Calendar, User, Film, Heart } from "lucide-react";
 import { Series } from "../types";
 
 interface SeriesCardProps {
@@ -7,6 +7,7 @@ interface SeriesCardProps {
   onOpenEpisodes: (series: Series) => void;
   isFavorite?: boolean;
   onToggleFavorite?: (series: Series) => void;
+  key?: any;
 }
 
 export default function SeriesCard({
@@ -96,8 +97,8 @@ export default function SeriesCard({
           className="absolute inset-0 bg-black/30 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto cursor-pointer" 
           onClick={() => onOpenEpisodes(series)}
         >
-          <div className="w-10 h-10 xs:w-14 xs:h-14 rounded-full bg-red-600/95 flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:bg-red-500">
-            <List size={18} className="text-white xs:w-6 xs:h-6" />
+          <div className="w-10 h-10 xs:w-14 xs:h-14 rounded-full bg-red-650/95 flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:bg-red-500">
+            <Download size={16} className="text-white xs:w-5 xs:h-5" />
           </div>
         </div>
 
@@ -140,23 +141,25 @@ export default function SeriesCard({
         <div className="flex flex-wrap gap-0.5 sm:gap-1 pt-0.5 min-h-[16px] sm:min-h-[22px] overflow-hidden">
           {series.genres && series.genres.slice(0, 2).map((g, gIdx) => (
             <span 
-              key={gIdx}
-              className="text-[8px] sm:text-[9.5px] font-mono tracking-wider font-extrabold uppercase bg-white/5 border border-white/5 px-2 py-0.5 sm:py-1 rounded text-gray-400 flex items-center justify-center"
+              key={`${g}-${gIdx}`}
+              className="text-[8px] xs:text-[9.5px] font-mono font-medium px-1.5 py-0.5 rounded bg-white/3 text-gray-400 uppercase border border-white/3"
             >
               {g}
             </span>
           ))}
         </div>
 
-        {/* Action Trigger Buttons Container */}
-        <div className="flex gap-2 pt-1 z-30 pointer-events-auto">
-          <button 
-            onClick={() => onOpenEpisodes(series)}
-            className="flex-1 select-none flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-red-650 to-rose-650 hover:brightness-110 active:scale-97 text-white text-[10px] sm:text-xs font-bold font-sans rounded-xl border border-red-500/15 cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.15)] transition-all"
-          >
-            <Play size={10} fill="currentColor" className="sm:w-3 sm:h-3" />
-            <span>Select Episode</span>
-          </button>
+        {/* Interactive primary trigger block */}
+        <div className="space-y-1.5 sm:space-y-2 pt-1.5 sm:pt-2 border-t border-white/5">
+          <div className="grid grid-cols-1 gap-1.5 sm:gap-2">
+            <button
+              onClick={() => onOpenEpisodes(series)}
+              className="py-1.5 px-2 rounded-lg sm:rounded-xl bg-white/4 hover:bg-white/10 text-gray-300 hover:text-white border border-white/5 font-display text-[9px] xs:text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+            >
+              <Download size={9} className="xs:w-3 xs:h-3" />
+              <span className="truncate">Downloads</span>
+            </button>
+          </div>
         </div>
 
       </div>

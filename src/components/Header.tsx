@@ -1,4 +1,6 @@
-import { Search, Flame, Clock, Heart, PlusCircle, Tv, Sun, Moon } from "lucide-react";
+import { Search, Flame, Clock, Heart, PlusCircle, Tv, Sun, Moon, Bell, BellRing, Trash2, Check, Inbox } from "lucide-react";
+import { useState } from "react";
+import { AppNotification } from "../types";
 
 interface HeaderProps {
   searchQuery: string;
@@ -8,6 +10,10 @@ interface HeaderProps {
   totalCount: number;
   theme: "dark" | "light";
   onThemeToggle: () => void;
+  notifications: AppNotification[];
+  onMarkNotificationRead: (id: string) => void;
+  onDismissNotification: (id: string) => void;
+  onPlayMovieTitle: (title: string) => void;
 }
 
 export default function Header({ 
@@ -17,8 +23,15 @@ export default function Header({
   setActiveTab, 
   totalCount,
   theme,
-  onThemeToggle
+  onThemeToggle,
+  notifications,
+  onMarkNotificationRead,
+  onDismissNotification,
+  onPlayMovieTitle
 }: HeaderProps) {
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
   return (
     <header className="sticky top-0 z-40 w-full transition-all duration-300">
       {/* Outer blurred glass panel */}
@@ -122,6 +135,111 @@ export default function Header({
               <PlusCircle size={14} />
               <span>Request Arena</span>
             </button>
+
+            {/* Premium Actionable Notification Bell Component */}
+            <div className="relative">
+              <button
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                className={`p-2 ml-1 rounded-xl transition-all duration-300 flex items-center justify-center shrink-0 cursor-pointer active:scale-95 shadow-md border ${
+                  isNotifOpen 
+                    ? "bg-red-600/20 text-white border-red-500/40" 
+                    : "bg-white/4 hover:bg-white/10 text-gray-400 hover:text-white border-white/5 hover:border-white/10"
+                }`}
+                title="Notifications"
+              >
+                {unreadCount > 0 ? (
+                  <div className="relative">
+                    <BellRing size={14} className="text-red-500 animate-[bounce_1.5s_infinite]" />
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white shadow-[0_0_8px_rgba(220,38,38,0.8)] leading-none">
+                      {unreadCount}
+                    </span>
+                  </div>
+                ) : (
+                  <Bell size={14} />
+                )}
+              </button>
+
+              {/* Real-time Notifications Popover Dropdown */}
+              {isNotifOpen && (
+                <div className="absolute right-0 mt-3.5 w-72 sm:w-80 rounded-2xl border border-white/10 bg-[#0f0f18]/95 backdrop-blur-xl shadow-2xl p-4 z-50 animate-in fade-in slide-in-from-top-3 duration-300 select-text overflow-hidden">
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/5">
+                    <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                      Request Notifications
+                    </span>
+                    {unreadCount > 0 && (
+                      <span className="text-[10px] text-red-400 font-semibold bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/10">
+                        {unreadCount} New
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="max-h-64 overflow-y-auto space-y-2.5 pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                    {notifications.length === 0 ? (
+                      <div className="py-8 flex flex-col items-center justify-center text-center gap-2">
+                        <Inbox size={20} className="text-stone-600" />
+                        <span className="text-[11px] font-sans text-stone-500 font-medium">
+                          No alerts right now
+                        </span>
+                      </div>
+                    ) : (
+                      notifications.map((notif) => (
+                        <div 
+                          key={notif.id} 
+                          className={`relative group p-2.5 rounded-xl border transition-all flex flex-col gap-1.5 ${
+                            notif.isRead 
+                              ? "bg-white/2 border-white/3" 
+                              : "bg-red-950/10 hover:bg-red-950/20 border-red-500/10 hover:border-red-500/20"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <span 
+                              onClick={() => {
+                                if (notif.movieTitle) {
+                                  onPlayMovieTitle(notif.movieTitle);
+                                  setIsNotifOpen(false);
+                                }
+                                if (!notif.isRead) {
+                                  onMarkNotificationRead(notif.id);
+                                }
+                              }}
+                              className={`text-[11px] font-sans leading-snug cursor-pointer text-left hover:text-red-400 transition-colors ${
+                                notif.isRead ? "text-stone-400" : "text-white font-medium"
+                              }`}
+                            >
+                              {notif.message}
+                            </span>
+                            <div className="flex items-center gap-1 shrink-0 opacity-80 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                              {!notif.isRead && (
+                                <button
+                                  onClick={() => onMarkNotificationRead(notif.id)}
+                                  className="p-1 rounded bg-white/5 hover:bg-white/10 text-emerald-400 transition-colors cursor-pointer"
+                                  title="Mark as read"
+                                >
+                                  <Check size={11} />
+                                </button>
+                              )}
+                              <button
+                                onClick={() => onDismissNotification(notif.id)}
+                                className="p-1 rounded bg-white/5 hover:bg-white/10 text-stone-400 hover:text-red-400 transition-colors cursor-pointer"
+                                  title="Dismiss notification"
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            </div>
+                          </div>
+                          {!notif.isRead && (
+                            <div className="flex items-center gap-1">
+                              <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse shadow-sm" />
+                              <span className="text-[9px] font-mono text-red-400 font-semibold tracking-wider uppercase">Unread</span>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Theme toggle button */}
             <button

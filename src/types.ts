@@ -64,4 +64,14 @@ export interface CommunityRequest {
   createdAt: number;
 }
 
+export interface AppNotification {
+  id: string;
+  userId: string;
+  message: string;
+  isRead: boolean;
+  createdAt: number;
+  movieTitle?: string;
+}
+
+
 
