@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   PlusCircle, Send, CheckCircle, Sparkles, Star, Flame, 
   History, User, ShieldCheck, Database, UploadCloud, Video, 
   HelpCircle, AlertTriangle, Play, ChevronRight, CheckCircle2, 
   ArrowUpCircle, ChevronDown, Check, Heart, Clock, Users, Laptop, Film,
-  Edit, Trash2, Search, Tv
+  Edit, Trash2, Search, Tv, ListOrdered
 } from "lucide-react";
 import { Movie, MovieLink, CommunityRequest, Series, SeriesEpisode } from "../types";
 import { motion, AnimatePresence } from "motion/react";
@@ -64,6 +64,9 @@ interface RequestSectionProps {
   onAdminAddSeries?: (series: Series) => void;
   onAdminUpdateSeries?: (oldTitle: string, series: Series) => void;
   onAdminDeleteSeries?: (seriesTitle: string) => void;
+
+  isAdminLoggedIn?: boolean;
+  onAdminLoggedInChange?: (loggedIn: boolean) => void;
 }
 
 // 1. Premium Glassmorphic Dropdown component 
@@ -158,7 +161,9 @@ export default function RequestSection({
   series,
   onAdminAddSeries,
   onAdminUpdateSeries,
-  onAdminDeleteSeries
+  onAdminDeleteSeries,
+  isAdminLoggedIn,
+  onAdminLoggedInChange
 }: RequestSectionProps) {
   // Input form state variables
   const [movieName, setMovieName] = useState("");
@@ -168,8 +173,15 @@ export default function RequestSection({
   const [quality, setQuality] = useState("Original HD (Recommended)");
   const [comments, setComments] = useState("");
 
-  // Admin Login Security State
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  // Admin Ingestion Security State handling (lifts to parent App.tsx)
+  const [localIsAdminLoggedIn, setLocalIsAdminLoggedIn] = useState(false);
+  const isCurrentlyAdmin = isAdminLoggedIn !== undefined ? isAdminLoggedIn : localIsAdminLoggedIn;
+  const setIsCurrentlyAdmin = (loggedIn: boolean) => {
+    setLocalIsAdminLoggedIn(loggedIn);
+    if (onAdminLoggedInChange) {
+      onAdminLoggedInChange(loggedIn);
+    }
+  };
   const [adminUsernameInput, setAdminUsernameInput] = useState("");
   const [adminPasswordInput, setAdminPasswordInput] = useState("");
   const [adminLoginError, setAdminLoginError] = useState("");
@@ -198,6 +210,7 @@ export default function RequestSection({
   const [cmsSeriesLastUpdated, setCmsSeriesLastUpdated] = useState("");
   const [cmsSeriesEpisodeCount, setCmsSeriesEpisodeCount] = useState("");
   const [cmsSeriesEpisodeUrls, setCmsSeriesEpisodeUrls] = useState<string[]>([]);
+  const [cmsSeriesHeroPosition, setCmsSeriesHeroPosition] = useState<"top" | "center" | "bottom">("center");
 
   // Admin CMS Form Inputs
   const [cmsTitle, setCmsTitle] = useState("");
@@ -216,11 +229,34 @@ export default function RequestSection({
   const [cmsUrl4K, setCmsUrl4K] = useState("");
   const [cmsWatchUrl, setCmsWatchUrl] = useState("");
   const [cmsTrailerUrl, setCmsTrailerUrl] = useState("");
+  const [cmsHeroPosition, setCmsHeroPosition] = useState<"top" | "center" | "bottom">("center");
 
   const [editingMovieTitle, setEditingMovieTitle] = useState<string | null>(null);
   const [activeFulfillmentReqId, setActiveFulfillmentReqId] = useState<string | null>(null);
   const [catalogSearch, setCatalogSearch] = useState("");
   const [catalogFilterType, setCatalogFilterType] = useState<"movies" | "series">("movies");
+  const [catalogSortBy, setCatalogSortBy] = useState<string>("date_newest");
+  const [isCatalogSortOpen, setIsCatalogSortOpen] = useState(false);
+  const catalogSortRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (catalogSortRef.current && !catalogSortRef.current.contains(event.target as Node)) {
+        setIsCatalogSortOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const catalogSortOptions = [
+    { value: "date_newest", label: "Latest Added" },
+    { value: "date_oldest", label: "Oldest Added" },
+    { value: "name_asc", label: "A-Z" },
+    { value: "name_desc", label: "Z-A" },
+  ];
   const [deleteConfirmationState, setDeleteConfirmationState] = useState<{
     isOpen: boolean;
     itemId: string;
@@ -342,6 +378,7 @@ export default function RequestSection({
     setCmsUrl4K("");
     setCmsWatchUrl("");
     setCmsTrailerUrl("");
+    setCmsHeroPosition("center");
     setEditingMovieTitle(null);
     setActiveFulfillmentReqId(null);
 
@@ -361,6 +398,7 @@ export default function RequestSection({
     setCmsSeriesLastUpdated(new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
     setCmsSeriesEpisodeCount("");
     setCmsSeriesEpisodeUrls([]);
+    setCmsSeriesHeroPosition("center");
   };
 
   const handleEpisodeCountChange = (val: string) => {
@@ -424,7 +462,8 @@ export default function RequestSection({
         episodeNumber: idx + 1,
         episode: idx + 1,
         downloadUrl: url.trim()
-      }))
+      })),
+      heroPosition: cmsSeriesHeroPosition
     };
 
     if (editingSeriesTitle) {
@@ -462,6 +501,7 @@ export default function RequestSection({
     
     setCmsSeriesEpisodeCount(String(s.episodes ? s.episodes.length : 0));
     setCmsSeriesEpisodeUrls(s.episodes ? s.episodes.map(ep => ep.downloadUrl) : []);
+    setCmsSeriesHeroPosition(s.heroPosition || "center");
     
     setEditingSeriesTitle(s.title);
     setPublishType("series");
@@ -515,6 +555,7 @@ export default function RequestSection({
     setCmsUrl4K(url4K);
     setCmsWatchUrl(movie.watchUrl || "");
     setCmsTrailerUrl(movie.trailerUrl || "");
+    setCmsHeroPosition(movie.heroPosition || "center");
     
     setEditingMovieTitle(movie.title);
     setActiveFulfillmentReqId(null);
@@ -589,7 +630,8 @@ export default function RequestSection({
       lastUpdated: cmsLastUpdated.trim(),
       links: compiledLinks,
       watchUrl: cmsWatchUrl.trim() || undefined,
-      trailerUrl: cmsTrailerUrl.trim() || undefined
+      trailerUrl: cmsTrailerUrl.trim() || undefined,
+      heroPosition: cmsHeroPosition
     };
 
     if (activeFulfillmentReqId) {
@@ -634,7 +676,7 @@ export default function RequestSection({
     });
   };
 
-  if (isAdminLoggedIn) {
+  if (isCurrentlyAdmin) {
     return (
       <div 
         className="w-full rounded-3xl bg-gradient-to-b from-[#0a0a0f]/95 via-black/98 to-[#050505]/95 border border-white/5 p-5 sm:p-7 shadow-[0_20px_50px_rgba(255,45,85,0.12)] space-y-6 relative overflow-hidden backdrop-blur-3xl font-sans"
@@ -656,7 +698,7 @@ export default function RequestSection({
 
           <button
             onClick={() => {
-              setIsAdminLoggedIn(false);
+              setIsCurrentlyAdmin(false);
               setAdminUsernameInput("");
               setAdminPasswordInput("");
               resetCmsForm();
@@ -702,6 +744,73 @@ export default function RequestSection({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Admin Dashboard Stats Blueprint Row */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 select-none">
+          {/* Total Movies Card */}
+          <div className="relative overflow-hidden group p-4 rounded-2xl bg-white/4 border border-white/5 hover:border-red-500/20 hover:shadow-[0_0_20px_rgba(239,68,68,0.15)] transition-all duration-300">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/5 rounded-full blur-2xl group-hover:bg-red-500/10 transition-colors pointer-events-none" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 sm:p-2.5 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20">
+                <Film size={20} className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
+              </div>
+              <div className="space-y-0.5">
+                <span className="block text-[10px] font-mono uppercase tracking-wider text-gray-500 font-semibold">Movies</span>
+                <span className="block text-xl sm:text-2xl font-black text-white leading-none font-sans">
+                  {movies.length || 72}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Total Series Card */}
+          <div className="relative overflow-hidden group p-4 rounded-2xl bg-white/4 border border-white/5 hover:border-[#ff6b00]/20 hover:shadow-[0_0_20px_rgba(255,107,0,0.15)] transition-all duration-300">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-[#ff6b00]/5 rounded-full blur-2xl group-hover:bg-[#ff6b00]/10 transition-colors pointer-events-none" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 sm:p-2.5 rounded-xl bg-[#ff6b00]/10 text-amber-500 border border-[#ff6b00]/20">
+                <Tv size={20} className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
+              </div>
+              <div className="space-y-0.5">
+                <span className="block text-[10px] font-mono uppercase tracking-wider text-gray-500 font-semibold">Series</span>
+                <span className="block text-xl sm:text-2xl font-black text-white leading-none font-sans">
+                  {series.length || 18}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Total Downloads Stats Blueprint */}
+          <div className="relative overflow-hidden group p-4 rounded-2xl bg-white/4 border border-white/5 hover:border-blue-500/20 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all duration-300">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-colors pointer-events-none" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <Database size={20} className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
+              </div>
+              <div className="space-y-0.5">
+                <span className="block text-[10px] font-mono uppercase tracking-wider text-gray-500 font-semibold">Downloads</span>
+                <span className="block text-xl sm:text-2xl font-black text-white leading-none font-sans">
+                  4,821 <span className="text-[10px] text-emerald-500 font-mono font-bold">+12%</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Outstanding Requests Stats Blueprint */}
+          <div className="relative overflow-hidden group p-4 rounded-2xl bg-white/4 border border-white/5 hover:border-purple-500/20 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all duration-300">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-colors pointer-events-none" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 sm:p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                <Users size={20} className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
+              </div>
+              <div className="space-y-0.5">
+                <span className="block text-[10px] font-mono uppercase tracking-wider text-gray-500 font-semibold">Requests</span>
+                <span className="block text-xl sm:text-2xl font-black text-white leading-none font-sans">
+                  {requests.length || 0} <span className="text-[10px] text-[#ff2d55] font-mono font-bold">Queue</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* SUB TABS SELECTION FOR CMS */}
         <div className="flex bg-[#050505] p-1 rounded-xl border border-white/5 gap-1 shadow-inner max-w-md">
@@ -981,7 +1090,7 @@ export default function RequestSection({
             </div>
 
             {/* Stream Playable URLs */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-mono font-black text-stone-400 uppercase tracking-widest block font-bold">Watch URL (Optional)</label>
                 <input 
@@ -1001,6 +1110,18 @@ export default function RequestSection({
                   onChange={(e) => setCmsTrailerUrl(e.target.value)} 
                   className="w-full px-4 py-3 rounded-xl bg-[#050505] border border-white/5 focus:border-[#ff2d55] text-white text-xs sm:text-sm font-mono focus:shadow-[0_0_12px_rgba(255,45,85,0.2)] focus:ring-1 focus:ring-[#ff2d55]/50 outline-none transition-all duration-300"
                 />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-mono font-black text-stone-400 uppercase tracking-widest block font-bold">Hero Banner Position</label>
+                <select
+                  value={cmsHeroPosition}
+                  onChange={(e) => setCmsHeroPosition(e.target.value as "top" | "center" | "bottom")}
+                  className="w-full px-4 py-3 rounded-xl bg-[#050505] border border-white/5 focus:border-[#ff2d55] text-white text-xs sm:text-sm font-mono focus:shadow-[0_0_12px_rgba(255,45,85,0.2)] focus:ring-1 focus:ring-[#ff2d55]/50 outline-none transition-all duration-300"
+                >
+                  <option value="top">Top (Focus Upper)</option>
+                  <option value="center">Center (Default)</option>
+                  <option value="bottom">Bottom (Focus Lower)</option>
+                </select>
               </div>
             </div>
 
@@ -1311,6 +1432,18 @@ export default function RequestSection({
                   className="w-full px-4 py-3 rounded-xl bg-[#050505] border border-white/5 focus:border-[#ff2d55] text-white text-xs sm:text-sm font-semibold focus:shadow-[0_0_12px_rgba(255,45,85,0.2)] outline-none"
                 />
               </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-mono font-black text-stone-400 uppercase tracking-widest block font-bold">Hero Banner Position</label>
+                <select
+                  value={cmsSeriesHeroPosition}
+                  onChange={(e) => setCmsSeriesHeroPosition(e.target.value as "top" | "center" | "bottom")}
+                  className="w-full px-4 py-3 rounded-xl bg-[#050505] border border-white/5 focus:border-[#ff2d55] text-white text-xs sm:text-sm font-semibold focus:shadow-[0_0_12px_rgba(255,45,85,0.2)] outline-none cursor-pointer"
+                >
+                  <option value="top">Top (Focus Upper)</option>
+                  <option value="center">Center (Default)</option>
+                  <option value="bottom">Bottom (Focus Lower)</option>
+                </select>
+              </div>
             </div>
 
             {/* Action buttons */}
@@ -1418,16 +1551,76 @@ export default function RequestSection({
                 </button>
               </div>
 
-              {/* Search input bar */}
-              <div className="relative w-full sm:max-w-xs">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-600" size={13} strokeWidth={3} />
-                <input 
-                  type="text" 
-                  placeholder={catalogFilterType === "movies" ? "Search catalog movies..." : "Search catalog series..."}
-                  value={catalogSearch}
-                  onChange={(e) => setCatalogSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 rounded-lg bg-[#050505] border border-white/5 focus:border-[#ff2d55] text-white text-xs font-semibold outline-none focus:shadow-[0_0_8px_rgba(255,45,85,0.15)] ring-1 ring-transparent font-sans"
-                />
+              {/* Search input bar & Sort By dropdown */}
+              <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 w-full sm:w-auto">
+                {/* Search input bar */}
+                <div className="relative w-full sm:w-56">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-600" size={13} strokeWidth={3} />
+                  <input 
+                    type="text" 
+                    placeholder={catalogFilterType === "movies" ? "Search catalog movies..." : "Search catalog series..."}
+                    value={catalogSearch}
+                    onChange={(e) => setCatalogSearch(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 rounded-lg bg-[#050505] border border-white/5 focus:border-[#ff2d55] text-white text-xs font-semibold outline-none focus:shadow-[0_0_8px_rgba(255,45,85,0.15)] ring-1 ring-transparent font-sans"
+                  />
+                </div>
+
+                {/* Sort By Custom Dropdown */}
+                <div className="relative inline-block text-left w-full xs:w-auto shrink-0 select-none" ref={catalogSortRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsCatalogSortOpen(!isCatalogSortOpen)}
+                    className="w-full xs:w-auto flex items-center justify-between xs:justify-start gap-2 px-4 py-2 rounded-xl bg-white/4 border border-white/5 hover:border-[#ff2d55]/40 hover:bg-[#ff2d55]/5 transition-all duration-300 text-gray-300 hover:text-white cursor-pointer active:scale-95 shadow-inner group relative"
+                  >
+                    <div className="flex items-center gap-2">
+                      <ListOrdered size={14} className="text-[#ff2d55] group-hover:rotate-12 transition-transform duration-300" />
+                      <span className="text-[11px] font-mono font-bold text-gray-400 uppercase">Sort:</span>
+                      <span className="text-xs font-semibold text-white ml-1">
+                        {catalogSortBy === "date_newest" && "Latest Added"}
+                        {catalogSortBy === "date_oldest" && "Oldest Added"}
+                        {catalogSortBy === "name_asc" && "A-Z"}
+                        {catalogSortBy === "name_desc" && "Z-A"}
+                      </span>
+                    </div>
+                    <ChevronDown size={12} className={`text-stone-400 transition-transform duration-300 ml-2 ${isCatalogSortOpen ? "rotate-180 text-rose-500" : ""}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {isCatalogSortOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute right-0 mt-2 w-48 rounded-2xl border border-[#ff2d55]/30 bg-[#07070cdf]/95 backdrop-blur-xl shadow-[0_10px_35px_rgba(255,45,85,0.25)] p-2.5 z-55 overflow-hidden space-y-1"
+                      >
+                        {catalogSortOptions.map((opt) => {
+                          const isSelected = catalogSortBy === opt.value;
+                          return (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => {
+                                setCatalogSortBy(opt.value);
+                                setIsCatalogSortOpen(false);
+                              }}
+                              className={`w-full py-2 px-3 rounded-xl flex items-center justify-between transition-all duration-200 text-left text-xs font-semibold select-none cursor-pointer group/item ${
+                                isSelected
+                                  ? "bg-[#ff2d55]/15 border border-[#ff2d55]/35 text-rose-400 shadow-[inset_0_1px_8px_rgba(255,45,85,0.1)] font-bold mb-0.5"
+                                  : "text-gray-400 hover:bg-[#ff2d55]/5 border border-transparent hover:border-[#ff2d55]/10 hover:text-white mb-0.5"
+                              }`}
+                            >
+                              <span>{opt.label}</span>
+                              {isSelected && (
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#ff2d55] shadow-[0_0_8px_rgba(255,45,85,1)]" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
 
@@ -1449,7 +1642,41 @@ export default function RequestSection({
                     );
                   }
 
-                  return filtered.map((m, mIdx) => {
+                  const sortedFilteredMovies = [...filtered].sort((a, b) => {
+                    if (catalogSortBy === "rating_highest" || catalogSortBy === "popularity") {
+                      const ratingA = parseFloat(a.rating ? a.rating.replace("/10", "") : "0") || 0;
+                      const ratingB = parseFloat(b.rating ? b.rating.replace("/10", "") : "0") || 0;
+                      return ratingB - ratingA;
+                    }
+                    if (catalogSortBy === "rating_lowest") {
+                      const ratingA = parseFloat(a.rating ? a.rating.replace("/10", "") : "0") || 0;
+                      const ratingB = parseFloat(b.rating ? b.rating.replace("/10", "") : "0") || 0;
+                      return ratingA - ratingB;
+                    }
+                    if (catalogSortBy === "name_asc") {
+                      const titleA = a.movieName || a.title || "";
+                      const titleB = b.movieName || b.title || "";
+                      return titleA.localeCompare(titleB);
+                    }
+                    if (catalogSortBy === "name_desc") {
+                      const titleA = a.movieName || a.title || "";
+                      const titleB = b.movieName || b.title || "";
+                      return titleB.localeCompare(titleA);
+                    }
+                    if (catalogSortBy === "date_newest" || catalogSortBy === "recently_updated") {
+                      const timeA = a.lastUpdated ? Date.parse(a.lastUpdated) : 0;
+                      const timeB = b.lastUpdated ? Date.parse(b.lastUpdated) : 0;
+                      return (timeB || 0) - (timeA || 0);
+                    }
+                    if (catalogSortBy === "date_oldest") {
+                      const timeA = a.lastUpdated ? Date.parse(a.lastUpdated) : 0;
+                      const timeB = b.lastUpdated ? Date.parse(b.lastUpdated) : 0;
+                      return (timeA || 0) - (timeB || 0);
+                    }
+                    return 0;
+                  });
+
+                  return sortedFilteredMovies.map((m, mIdx) => {
                     const mId = m.id || m.title.replace(/[^a-zA-Z0-9_\-]/g, "_");
                     return (
                       <div 
@@ -1509,7 +1736,41 @@ export default function RequestSection({
                     );
                   }
 
-                  return filteredSeries.map((s, sIdx) => {
+                  const sortedFilteredSeries = [...filteredSeries].sort((a, b) => {
+                    if (catalogSortBy === "rating_highest" || catalogSortBy === "popularity") {
+                      const ratingA = parseFloat(a.rating ? a.rating.replace("/10", "") : "0") || 0;
+                      const ratingB = parseFloat(b.rating ? b.rating.replace("/10", "") : "0") || 0;
+                      return ratingB - ratingA;
+                    }
+                    if (catalogSortBy === "rating_lowest") {
+                      const ratingA = parseFloat(a.rating ? a.rating.replace("/10", "") : "0") || 0;
+                      const ratingB = parseFloat(b.rating ? b.rating.replace("/10", "") : "0") || 0;
+                      return ratingA - ratingB;
+                    }
+                    if (catalogSortBy === "name_asc") {
+                      const titleA = a.seriesName || a.title || "";
+                      const titleB = b.seriesName || b.title || "";
+                      return titleA.localeCompare(titleB);
+                    }
+                    if (catalogSortBy === "name_desc") {
+                      const titleA = a.seriesName || a.title || "";
+                      const titleB = b.seriesName || b.title || "";
+                      return titleB.localeCompare(titleA);
+                    }
+                    if (catalogSortBy === "date_newest" || catalogSortBy === "recently_updated") {
+                      const timeA = a.lastUpdated ? Date.parse(a.lastUpdated) : 0;
+                      const timeB = b.lastUpdated ? Date.parse(b.lastUpdated) : 0;
+                      return (timeB || 0) - (timeA || 0);
+                    }
+                    if (catalogSortBy === "date_oldest") {
+                      const timeA = a.lastUpdated ? Date.parse(a.lastUpdated) : 0;
+                      const timeB = b.lastUpdated ? Date.parse(b.lastUpdated) : 0;
+                      return (timeA || 0) - (timeB || 0);
+                    }
+                    return 0;
+                  });
+
+                  return sortedFilteredSeries.map((s, sIdx) => {
                     const sId = s.id || s.title.replace(/[^a-zA-Z0-9_\-]/g, "_");
                     return (
                       <div 
@@ -2020,7 +2281,7 @@ export default function RequestSection({
                 exit={{ opacity: 0, y: -15 }}
                 className="space-y-4 flex flex-col flex-1 font-sans"
               >
-                {!isAdminLoggedIn ? (
+                {!isCurrentlyAdmin ? (
                   <div className="space-y-6 py-6 flex flex-col flex-1 justify-center max-w-sm mx-auto w-full">
                     <div className="text-center space-y-2 pb-2">
                       <div className="w-14 h-14 rounded-full bg-[#ff2d55]/10 border border-[#ff2d55]/30 flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(255,45,85,0.3)]">
@@ -2038,9 +2299,10 @@ export default function RequestSection({
                       onSubmit={(e) => {
                         e.preventDefault();
                         if (adminUsernameInput.trim() === "admin" && adminPasswordInput === "moviemachi2026") {
-                          setIsAdminLoggedIn(true);
+                          setIsCurrentlyAdmin(true);
                           setAdminLoginError("");
                           setAdminPasswordInput("");
+                          window.scrollTo({ top: 0, behavior: "smooth" });
                         } else {
                           setAdminLoginError("Invalid Username or Password");
                         }
@@ -2104,7 +2366,7 @@ export default function RequestSection({
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => {
-                            setIsAdminLoggedIn(false);
+                            setIsCurrentlyAdmin(false);
                             setAdminUsernameInput("");
                             setAdminPasswordInput("");
                             resetCmsForm();

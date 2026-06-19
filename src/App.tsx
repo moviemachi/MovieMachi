@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { allMovies } from "./data/all_movies";
 import { Movie, CommunityRequest, Series, AppNotification } from "./types";
 import { 
-  seedMoviesIfEmpty, 
   fetchAllMoviesFromFirestore, 
   saveMovieToFirestore, 
   deleteMovieFromFirestore,
@@ -15,11 +14,13 @@ import {
   saveSeriesToFirestore,
   deleteSeriesFromFirestore,
   markNotificationAsReadInFirestore,
-  deleteNotificationFromFirestore
+  deleteNotificationFromFirestore,
+  ensureDatabaseSeeded
 } from "./lib/firebase";
 import { collection, onSnapshot, query, where, deleteDoc, doc } from "firebase/firestore";
 import BackgroundAurora from "./components/BackgroundAurora";
 import Header from "./components/Header";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import ContinueWatching from "./components/ContinueWatching";
 import MovieCard from "./components/MovieCard";
 import SeriesCard from "./components/SeriesCard";
@@ -30,7 +31,7 @@ import RequestSection from "./components/RequestSection";
 import { 
   Play, Download, Star, Sparkles, Filter, ListOrdered, 
   Tv, Film, X, Laptop, ShieldCheck, CheckCircle2, Info, Compass,
-  ChevronLeft, ChevronRight, Heart
+  ChevronLeft, ChevronRight, Heart, Flame, ChevronDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -38,8 +39,115 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string>("All Genres");
   const [sortBy, setSortBy] = useState<string>("date_newest");
-  const [isSortModalOpen, setIsSortModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("all"); // "all", "watching", "requests", "watchlist"
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
+  const [downloadPendingInfo, setDownloadPendingInfo] = useState<{
+    name: string;
+    quality: string;
+    url: string;
+  } | null>(null);
+
+  // Active background and hover state logic completely reverted
+
+  // Accurate online/offline monitoring state
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [isCheckingConnection, setIsCheckingConnection] = useState(false);
+  const [retryMessage, setRetryMessage] = useState<string | null>(null);
+  const [networkDiagnosticInfo, setNetworkDiagnosticInfo] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOffline(false);
+      setRetryMessage(null);
+      setNetworkDiagnosticInfo(null);
+    };
+    const handleOffline = () => {
+      setIsOffline(true);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    // Initial check
+    if (navigator.onLine !== undefined) {
+      setIsOffline(!navigator.onLine);
+    }
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  const handleRetryConnection = () => {
+    setIsCheckingConnection(true);
+    setRetryMessage("Pinging actual network gateway...");
+    
+    setTimeout(() => {
+      setIsCheckingConnection(false);
+      const isOnlineNow = navigator.onLine;
+      if (isOnlineNow) {
+        setIsOffline(false);
+        setRetryMessage(null);
+        setNetworkDiagnosticInfo(null);
+      } else {
+        setRetryMessage("Offline status persistent. Check router configuration.");
+        setTimeout(() => setRetryMessage(null), 3000);
+      }
+    }, 850);
+  };
+
+  const handleCheckNetwork = () => {
+    const ua = navigator.userAgent.toLowerCase();
+    const isAndroid = /android/.test(ua);
+    const isTV = /smart-tv|smarttv|googletv|appletv|firetv|firestick|tizen|netcast|webos|hbbtv|roku/.test(ua) || (isAndroid && /box|tv|atv/.test(ua));
+
+    // Double check connection right away
+    if (navigator.onLine) {
+      setIsOffline(false);
+      setRetryMessage(null);
+      setNetworkDiagnosticInfo(null);
+      return;
+    }
+
+    if (isTV) {
+      setNetworkDiagnosticInfo(
+        "📺 SMART TV / BOX DETECTED:\n\n1. Press Home/Settings button on your Remote.\n2. Go to 'Network/Wi-Fi Settings'.\n3. Disconnect and reconnect to your router.\n4. Check if other streaming apps on the TV work.\n5. If on Fire TV, rerun network status check from System Settings -> Network."
+      );
+    } else if (isAndroid) {
+      try {
+        // Try opening native wifi settings
+        window.location.href = "intent:#Intent;action=android.settings.WIFI_SETTINGS;end";
+      } catch (e) {
+        setNetworkDiagnosticInfo(
+          "📱 ANDROID DEVICE DETECTED:\n\n1. Swipe down from top of mobile screen to see quick tiles.\n2. Toggle Wi-Fi and Cellular data Off, then back On.\n3. Verify your hotspot subscription status.\n4. Close and reload the MovieMachi browser tab."
+        );
+      }
+    } else {
+      try {
+        // Desktop network setting trigger attempt
+        window.location.href = "ms-settings:network-wifi";
+      } catch (e) {
+        setNetworkDiagnosticInfo(
+          "💻 DESKTOP / LAPTOP DETECTED:\n\n1. Check taskbar/menu-bar to see if Wi-Fi or Ethernet is active.\n2. Go to System Preferences -> Network settings to troubleshoot.\n3. Make sure proxy or VPN settings are not blocking the gateway.\n4. Restart browser window."
+        );
+      }
+    }
+  };
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
+        setIsSortDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const [activeTab, setActiveTab ] = useState<string>("all"); // "all", "watching", "requests", "watchlist"
 
   const [movies, setMovies] = useState<Movie[]>(() => {
     try {
@@ -105,6 +213,16 @@ export default function App() {
     }
   });
 
+  // Lifted state to synchronize Header and RequestSection for admin security layout
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+
+  // Automatically scroll to top of page when admin logs in successfully
+  useEffect(() => {
+    if (isAdminLoggedIn) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [isAdminLoggedIn]);
+
   // Movie available instant alert banner state
   const [availNotification, setAvailNotification] = useState<Movie | null>(null);
 
@@ -119,44 +237,35 @@ export default function App() {
 
   // Load and sync movies and requests from Firebase Firestore in Real-Time
   useEffect(() => {
-    // Seed first if empty
-    seedMoviesIfEmpty()
+    // Run database seeding check first to ensure Firestore gets all 72 movies as a single source of truth
+    ensureDatabaseSeeded()
       .then(() => {
         // Fetch movies directly from Firestore to initialize state immediately
-        fetchAllMoviesFromFirestore()
-          .then((initialMovies) => {
-            if (initialMovies && initialMovies.length > 0) {
-              setMovies(initialMovies);
-            }
-          })
-          .catch((err) => {
-            console.warn("[Firebase] Offline fallback for movies catalog:", err);
-          });
-
-        // Fetch requests from Firestore to initialize state immediately
-        fetchAllRequestsFromFirestore()
-          .then((initialRequests) => {
-            if (initialRequests && initialRequests.length > 0) {
-              setRequests(initialRequests);
-            }
-          })
-          .catch((err) => {
-            console.warn("[Firebase] Offline fallback for requests ledger:", err);
-          });
-
-        // Fetch series from Firestore
-        fetchAllSeriesFromFirestore()
-          .then((initialSeries) => {
-            if (initialSeries && initialSeries.length > 0) {
-              setSeries(initialSeries);
-            }
-          })
-          .catch((err) => {
-            console.warn("[Firebase] Offline fallback for series catalog:", err);
-          });
+        return fetchAllMoviesFromFirestore();
+      })
+      .then((initialMovies) => {
+        setMovies(initialMovies || []);
       })
       .catch((err) => {
-        console.warn("[Firebase] Offline fallback overall startup routine failed:", err);
+        console.warn("[Firebase] Offline fallback or initialization check for movies catalog:", err);
+      });
+
+    // Fetch requests from Firestore to initialize state immediately
+    fetchAllRequestsFromFirestore()
+      .then((initialRequests) => {
+        setRequests(initialRequests || []);
+      })
+      .catch((err) => {
+        console.warn("[Firebase] Offline fallback for requests ledger:", err);
+      });
+
+    // Fetch series from Firestore
+    fetchAllSeriesFromFirestore()
+      .then((initialSeries) => {
+        setSeries(initialSeries || []);
+      })
+      .catch((err) => {
+        console.warn("[Firebase] Offline fallback for series catalog:", err);
       });
 
     // 1. Set up active real-time subscription for movies collection
@@ -169,9 +278,7 @@ export default function App() {
           id: document.id
         } as Movie);
       });
-      if (list.length > 0) {
-        setMovies(list);
-      }
+      setMovies(list);
     }, (error) => {
       console.error("Movies onSnapshot error:", error);
     });
@@ -541,6 +648,13 @@ export default function App() {
     try {
       await deleteMovieFromFirestore(movieId);
       
+      // Update local state immediately
+      setMovies(prev => {
+        const updated = prev.filter(m => m.id !== movieId);
+        localStorage.setItem("moviemachi_active_catalog", JSON.stringify(updated));
+        return updated;
+      });
+
       // Also remove from watchlist if present
       setWatchlist(prev => {
         const updated = prev.filter(t => t.toLowerCase() !== movieId.toLowerCase());
@@ -575,6 +689,13 @@ export default function App() {
   const handleAdminDeleteSeries = async (seriesId: string) => {
     try {
       await deleteSeriesFromFirestore(seriesId);
+      
+      // Update local state immediately
+      setSeries(prev => {
+        const updated = prev.filter(s => s.id !== seriesId);
+        localStorage.setItem("moviemachi_series_catalog", JSON.stringify(updated));
+        return updated;
+      });
     } catch (err) {
       console.error("Error deleting series:", err);
     }
@@ -785,6 +906,8 @@ export default function App() {
   const [activeTrailerMovie, setActiveTrailerMovie] = useState<Movie | null>(null);
   const [selectedSeries, setSelectedSeries] = useState<Series | null>(null);
 
+  // Modals backdrop binding reverted
+
   const handlePlayEpisode = (seriesItem: Series, episodeNum: number) => {
     const episodeObj = seriesItem.episodes?.find(ep => (ep.episodeNumber === episodeNum || ep.episode === episodeNum));
     if (episodeObj && episodeObj.downloadUrl) {
@@ -811,7 +934,11 @@ export default function App() {
   const handleDownloadEpisode = (seriesItem: Series, episodeNum: number) => {
     const episodeObj = seriesItem.episodes?.find(ep => (ep.episodeNumber === episodeNum || ep.episode === episodeNum));
     if (episodeObj && episodeObj.downloadUrl) {
-      window.open(episodeObj.downloadUrl, "_blank");
+      setDownloadPendingInfo({
+        name: `${seriesItem.seriesName} - Episode ${episodeNum}`,
+        quality: "Episode Download",
+        url: episodeObj.downloadUrl
+      });
     }
   };
 
@@ -831,15 +958,23 @@ export default function App() {
   }, [activeTrailerMovie]);
 
   // TV remote control simulate guides helper
-  const [tvKeyboardActive, setTvKeyboardActive] = useState(false);
+  const [tvKeyboardActive, setTvKeyboardActive] = useState(true);
+
+  // Home page sub-tab state (Home | Movies | Series)
+  const [homeSubTab, setHomeSubTab] = useState<"all" | "movies" | "series">("all");
 
   // Movie pagination state
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Reset page when search, genre, sorting, or tab changes
+  // Reset page when search, genre, sorting, tab, or sub-tab changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedGenre, sortBy, activeTab]);
+  }, [searchQuery, selectedGenre, sortBy, activeTab, homeSubTab]);
+
+  // Reset slider index when sub-tab changes
+  useEffect(() => {
+    setCurrentSlideIndex(0);
+  }, [homeSubTab]);
 
   // Auto Scroll to catalog
   const scrollToCatalog = () => {
@@ -877,6 +1012,16 @@ export default function App() {
     // If activeTab is watchlist, filter by watchlist first
     if (activeTab === "watchlist" && !watchlist.includes(item.title)) {
       return false;
+    }
+
+    // Filter by homeSubTab if on Home
+    if (activeTab === "all") {
+      if (homeSubTab === "movies" && item.type !== "movie") {
+        return false;
+      }
+      if (homeSubTab === "series" && item.type !== "series") {
+        return false;
+      }
     }
 
     // Search input match
@@ -972,6 +1117,22 @@ export default function App() {
       startPage = endPage - 4;
     }
   }
+
+  const paginatedPosterUrls = useMemo(() => {
+    return paginatedMovies.map((m) => m.image).join(",");
+  }, [paginatedMovies]);
+
+  // Preload visible poster images of the current paginated page to guarantee zero-latency dynamic background transitions on hover
+  useEffect(() => {
+    if (paginatedMovies && paginatedMovies.length > 0) {
+      paginatedMovies.forEach((item) => {
+        if (item.image) {
+          const img = new Image();
+          img.src = item.image;
+        }
+      });
+    }
+  }, [paginatedPosterUrls]);
 
   const paginationPages = [];
   for (let p = startPage; p <= endPage; p++) {
@@ -1104,9 +1265,16 @@ export default function App() {
     }
   };
 
-  const latestMovies = [...allMediaItems]
-    .sort((a, b) => parseDateForSlider(b.lastUpdated) - parseDateForSlider(a.lastUpdated))
-    .slice(0, 5);
+  const latestMovies = useMemo(() => {
+    return [...allMediaItems]
+      .filter(item => {
+        if (homeSubTab === "movies") return item.type === "movie";
+        if (homeSubTab === "series") return item.type === "series";
+        return true;
+      })
+      .sort((a, b) => parseDateForSlider(b.lastUpdated) - parseDateForSlider(a.lastUpdated))
+      .slice(0, 5);
+  }, [allMediaItems, homeSubTab]);
 
   useEffect(() => {
     if (isAutoplayPaused || latestMovies.length === 0) return;
@@ -1150,10 +1318,93 @@ export default function App() {
     setActiveTab("all");
   };
 
+  if (isOffline) {
+    return (
+      <div className="relative min-h-screen text-gray-200 font-sans flex items-center justify-center p-4 select-none overflow-x-hidden bg-[#09090f] w-full">
+        {/* Background Aurora */}
+        <BackgroundAurora />
+
+        {/* Cinematic Premium Dark Centered Glass Container with Red Glow accent */}
+        <div className="relative w-full max-w-md sm:max-w-lg mx-auto bg-[#0d0e15]/75 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 sm:p-10 text-center shadow-[0_20px_50px_rgba(0,0,0,0.85),_0_0_50px_rgba(255,45,85,0.18)] flex flex-col items-center justify-center gap-6 max-h-[96vh] overflow-y-auto transform scale-100 transition-all duration-300">
+          
+          {/* Subtle logo vector laser line shine */}
+          <div className="absolute -top-10 left-10 right-10 h-[2px] bg-gradient-to-r from-transparent via-[#ff2d55]/40 to-transparent blur-md pointer-events-none" />
+
+          {/* Premium Logo branding with Red Ring Glow */}
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#ff2d55] to-[#ff6b00] flex items-center justify-center shadow-[0_4px_25px_rgba(255,45,85,0.45)] select-none shrink-0 transform hover:scale-105 transition-transform duration-300">
+            <span className="text-3xl sm:text-4xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.45)]">🎬</span>
+            <div className="absolute -inset-1.5 bg-gradient-to-tr from-[#ff2d55]/20 to-amber-500/20 rounded-2xl blur-lg pointer-events-none -z-10 animate-pulse" />
+          </div>
+
+          <div className="space-y-2.5 sm:space-y-3">
+            <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-widest uppercase bg-clip-text bg-gradient-to-r from-white via-stone-200 to-gray-400">
+              MovieMachi
+            </h1>
+            <div className="h-0.5 w-16 bg-gradient-to-r from-[#ff2d55] to-[#ff6b00] mx-auto rounded-full" />
+            
+            <h2 className="font-display font-bold text-lg sm:text-xl text-red-500 tracking-wide mt-2">
+              No Internet Connection
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-400 leading-relaxed max-w-sm mx-auto font-medium">
+              Please check your network and try again.
+            </p>
+          </div>
+
+          {/* Diagnostics Guidance Box if triggered */}
+          {networkDiagnosticInfo && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full text-left p-4 rounded-2xl bg-white/4 border border-white/5 font-mono text-[10px] sm:text-xs leading-relaxed text-stone-300 whitespace-pre-line"
+            >
+              {networkDiagnosticInfo}
+            </motion.div>
+          )}
+
+          {/* Status Message Line */}
+          {retryMessage && (
+            <p className="text-[11px] font-mono font-bold text-amber-400 animate-pulse bg-amber-500/10 border border-amber-500/20 py-2 px-4 rounded-xl w-full">
+              {retryMessage}
+            </p>
+          )}
+
+          {/* Interactive buttons row */}
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full mt-2 shrink-0">
+            <button
+              onClick={handleRetryConnection}
+              disabled={isCheckingConnection}
+              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-[#ff2d55] to-[#ff6b00] hover:brightness-110 active:scale-95 disabled:opacity-50 text-white font-sans font-black text-xs tracking-wider uppercase transition-all shadow-[0_0_20px_rgba(255,45,85,0.45)] cursor-pointer flex items-center justify-center gap-2 select-none"
+            >
+              <span>🔄</span> {isCheckingConnection ? "Checking..." : "Retry Connection"}
+            </button>
+
+            <button
+              onClick={handleCheckNetwork}
+              className="w-full py-3.5 px-6 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-stone-200 hover:text-white font-sans font-black text-xs tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center gap-2 select-none"
+            >
+              <span>⚙️</span> Check Network
+            </button>
+          </div>
+
+          {/* Device & Remote navigation compatible indicator */}
+          <div className="border-t border-white/5 w-full pt-4 mt-1">
+            <p className="text-[9px] font-mono text-gray-500 uppercase tracking-widest leading-none">
+              🎮 TV Remote & Keyboard Compatible
+            </p>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen text-gray-200 font-sans pb-16 selection:bg-red-650 selection:text-white">
       {/* Immersive motion dust space background wrapper */}
       <BackgroundAurora />
+
+      {/* Swipe-to-dismiss mobile-style PWA Install Notification Bar */}
+      <PWAInstallPrompt />
 
       {/* Sticky Premium Navigation Hub */}
       <Header 
@@ -1168,47 +1419,113 @@ export default function App() {
         onMarkNotificationRead={handleMarkNotificationRead}
         onDismissNotification={handleDismissNotification}
         onPlayMovieTitle={handlePlayMovieTitle}
+        isAdminLoggedIn={isAdminLoggedIn}
       />
 
-      {/* Smart TV Overlay banner */}
-      <div className="bg-gradient-to-r from-red-600/10 via-amber-500/5 to-transparent border-y border-red-500/15 py-2.5 px-4 sm:px-6 text-center select-none">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2">
-            <Tv size={16} className="text-red-500 animate-pulse" />
-            <span className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-white">
-              Sovereign TV Support Active
-            </span>
-            <span className="text-[10px] bg-red-950 text-red-400 border border-red-900/30 px-1.5 py-0.5 rounded-full font-mono uppercase font-bold hidden sm:inline">
-              Google TV • Fire TV
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] sm:text-xs text-gray-400">
-              Responsive key listeners mapped to standard remote parameters.
-            </span>
-            <button 
-              onClick={() => setTvKeyboardActive(!tvKeyboardActive)}
-              className={`text-[9px] sm:text-[10px] uppercase font-bold font-mono px-2 py-1 rounded transition-colors ${
-                tvKeyboardActive 
-                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40" 
-                  : "bg-white/5 text-gray-400 hover:text-white"
-              }`}
-            >
-              {tvKeyboardActive ? "Remote Connected" : "Keyboard Remote Map"}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-6 space-y-12">
+      <main className={`max-w-7xl mx-auto px-4 sm:px-6 md:px-8 ${isAdminLoggedIn ? "mt-0 pt-0 sm:pt-1" : "mt-6"} space-y-12`}>
         
         {/* Dynamic routing layouts depending on which activeTab tab is toggled */}
-        {activeTab === "all" ? (
+        {isAdminLoggedIn ? (
+          <RequestSection 
+            movies={movies}
+            requests={requests}
+            userId={userId}
+            onAddRequest={handleAddRequest}
+            onUpvoteRequest={handleRequestPlusOne}
+            onAdminUploadMovie={handleAdminUploadMovie}
+            onAdminAddMovie={handleAdminAddMovie}
+            onAdminUpdateMovie={handleAdminUpdateMovie}
+            onAdminDeleteMovie={handleAdminDeleteMovie}
+            onFulfillRequestCMS={handleFulfillRequestCMS}
+            setActivePlayerMovie={setActivePlayerMovie}
+            series={series}
+            onAdminAddSeries={handleAdminAddSeries}
+            onAdminUpdateSeries={handleAdminUpdateSeries}
+            onAdminDeleteSeries={handleAdminDeleteSeries}
+            isAdminLoggedIn={isAdminLoggedIn}
+            onAdminLoggedInChange={setIsAdminLoggedIn}
+          />
+        ) : activeTab === "all" ? (
           <>
+            {/* Home Page Sub-Filter Tabs: All | Movies | Series */}
+            {!searchQuery.trim() && (
+              <div id="home-sub-tabs-bar" className="flex items-center justify-center pt-2 pb-6 border-b border-white/5 animate-fade-in select-none w-full">
+                <div className="flex items-center bg-[#0d0e15]/85 backdrop-blur-xl border border-white/10 p-1.5 rounded-2xl relative shadow-[0_15px_35px_rgba(255,45,85,0.25)] w-full max-w-sm sm:max-w-[320px] mx-auto overflow-hidden group">
+                  
+                  {/* Subtle red/orange glow ambient overlay inside active region */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#ff2d55]/5 via-orange-500/5 to-[#ff2d55]/5 pointer-events-none" />
+                  
+                  {/* Sweep shimmer/shine animation overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#ff2d55]/15 to-transparent -translate-x-full animate-loop-shine pointer-events-none" />
+
+                  {/* Glass active slider background */}
+                  <div className="absolute inset-y-1.5 left-1.5 right-1.5 pointer-events-none w-[calc(100%-12px)]">
+                    <motion.div
+                      layoutId="activeSubTabIndicator"
+                      className="absolute h-full rounded-xl bg-gradient-to-r from-[#ff2d55] to-[#ff6b00] shadow-[0_0_22px_rgba(255,45,85,0.85),_inset_0_1px_1.5px_rgba(255,255,255,0.35)] animate-pulse-glow"
+                      initial={false}
+                      animate={{
+                        width: "33.333%",
+                        x: homeSubTab === "all" ? "0%" : homeSubTab === "movies" ? "100%" : "200%",
+                      }}
+                      transition={{ type: "spring", stiffness: 350, damping: 24 }}
+                    />
+                  </div>
+
+                  {/* Toggle Mode: All */}
+                  <button
+                    onClick={() => {
+                      setHomeSubTab("all");
+                    }}
+                    className={`flex-1 relative z-10 py-2.5 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-300 flex items-center justify-center cursor-pointer select-none ${
+                      homeSubTab === "all"
+                        ? "text-white scale-102 font-extrabold drop-shadow-[0_2px_6px_rgba(255,45,85,0.5)]"
+                        : "text-stone-400 hover:text-white"
+                    }`}
+                    title="View All Content"
+                    aria-label="All content view"
+                  >
+                    <span>All</span>
+                  </button>
+
+                  {/* Toggle Mode: Movies */}
+                  <button
+                    onClick={() => {
+                      setHomeSubTab("movies");
+                    }}
+                    className={`flex-1 relative z-10 py-2.5 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-300 flex items-center justify-center cursor-pointer select-none ${
+                      homeSubTab === "movies"
+                        ? "text-white scale-102 font-extrabold drop-shadow-[0_2px_6px_rgba(255,45,85,0.5)]"
+                        : "text-stone-400 hover:text-white"
+                    }`}
+                    title="Filter to Movies"
+                    aria-label="Movies tab view"
+                  >
+                    <span>Movies</span>
+                  </button>
+
+                  {/* Toggle Mode: Series */}
+                  <button
+                    onClick={() => {
+                      setHomeSubTab("series");
+                    }}
+                    className={`flex-1 relative z-10 py-2.5 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-300 flex items-center justify-center cursor-pointer select-none ${
+                      homeSubTab === "series"
+                        ? "text-white scale-102 font-extrabold drop-shadow-[0_2px_6px_rgba(255,45,85,0.5)]"
+                        : "text-stone-400 hover:text-white"
+                    }`}
+                    title="Filter to Series"
+                    aria-label="Series tab view"
+                  >
+                    <span>Series</span>
+                  </button>
+
+                </div>
+              </div>
+            )}
+
             {/* Interactive curated Spotlight slider block (Hides if filter is active for pristine layout) */}
-            {/* Interactive curated Spotlight slider block (Hides if filter is active for pristine layout) */}
-            {!searchQuery && selectedGenre === "All Genres" && latestMovies.length > 0 && (
+            {!searchQuery.trim() && selectedGenre === "All Genres" && latestMovies.length > 0 && (
               <div 
                 className="relative rounded-3xl overflow-hidden glass-panel border border-white/8 h-[280px] sm:h-[320px] md:h-[500px] flex items-end select-none group/slider shadow-[0_4px_30px_rgba(0,0,0,0.4)] touch-pan-y"
                 onMouseEnter={() => setIsAutoplayPaused(true)}
@@ -1236,6 +1553,7 @@ export default function App() {
                         alt={slide.title}
                         referrerPolicy="no-referrer"
                         className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
+                        style={{ objectPosition: slide.heroPosition || "center" }}
                         loading="lazy"
                       />
                       
@@ -1272,17 +1590,42 @@ export default function App() {
                         </p>
 
                         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1 sm:pt-2">
-                          {slide.type === "series" ? (
-                            <button 
+                          {slide.trailerUrl && slide.trailerUrl.trim() !== "" && (
+                            <button
                               onClick={() => {
                                 handleSlideInteraction();
-                                setSelectedSeries(slide as any);
+                                setActiveTrailerMovie(slide as any);
                               }}
-                              className="h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-red-650 hover:bg-red-550 border border-red-500/20 text-white font-display font-bold text-[9px] xs:text-[11px] sm:text-sm flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(239,68,68,0.35)]"
+                              className="h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-400 font-display font-bold text-[9px] xs:text-[11px] sm:text-sm flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer select-none font-semibold"
                             >
-                              <Play size={11} fill="currentColor" className="xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
-                              <span>Select Episodes</span>
+                              <span>🎬 Watch Trailer</span>
                             </button>
+                          )}
+
+                          {slide.type === "series" ? (
+                            <>
+                              <button 
+                                onClick={() => {
+                                  handleSlideInteraction();
+                                  setSelectedSeries(slide as any);
+                                }}
+                                className="h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-red-650 hover:bg-red-550 border border-red-500/20 text-white font-display font-bold text-[9px] xs:text-[11px] sm:text-sm flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(239,68,68,0.35)]"
+                              >
+                                <Play size={11} fill="currentColor" className="xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
+                                <span>Watch Online</span>
+                              </button>
+
+                              <button 
+                                onClick={() => {
+                                  handleSlideInteraction();
+                                  setSelectedSeries(slide as any);
+                                }}
+                                className="h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-white/5 hover:bg-white/10 text-gray-200 font-display font-bold text-[9px] xs:text-[11px] sm:text-sm border border-white/10 flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer"
+                              >
+                                <Download size={11} className="xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
+                                <span>Downloads</span>
+                              </button>
+                            </>
                           ) : (
                             <>
                               {hasWatchUrl && (
@@ -1376,82 +1719,130 @@ export default function App() {
             )}
 
             {/* Watch Continuity row */}
-            <div className="mt-8">
-              <ContinueWatching onResumeMovie={handleResumeMovie} />
-            </div>
+            {!searchQuery.trim() && (
+              <div className="mt-8 animate-fade-in">
+                <ContinueWatching onResumeMovie={handleResumeMovie} />
+              </div>
+            )}
 
             {/* Primary Movie Catalog Shelf */}
-            <div id="movie-catalog-shelf" className="space-y-6 pt-4 scroll-mt-24">
+            <div id="movie-catalog-shelf" className={`space-y-6 scroll-mt-24 ${searchQuery.trim() ? "pt-0 mt-0" : "pt-4"}`}>
               
               {/* Dynamic Filters Tool rail */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/5">
-                
-                {/* Visual Section Indicator */}
-                <div className="flex items-center gap-2.5">
-                  <div className="w-1.5 h-6 bg-red-600 rounded-full" />
-                  <h2 className="font-display font-black text-xl sm:text-2xl text-white uppercase tracking-wider">
-                    Feature Releases
-                  </h2>
-                </div>
-
-                {/* Filter / Sort Actions controls */}
-                <div className="flex flex-wrap items-center gap-2.5">
+              {!searchQuery.trim() && (
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/5 animate-fade-in">
                   
-                  {/* Sorting select node selector replaced with premium custom modal trigger */}
-                  <button
-                    onClick={() => setIsSortModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/4 border border-white/5 hover:border-[#ff2d55]/40 hover:bg-[#ff2d55]/5 transition-all text-gray-300 hover:text-white cursor-pointer active:scale-95 shadow-inner group"
-                    title="Change listing sort option"
-                  >
-                    <ListOrdered size={14} className="text-[#ff2d55] group-hover:animate-pulse" />
-                    <span className="text-[11px] font-mono font-bold text-gray-400 uppercase">Sort:</span>
-                    <span className="text-xs font-semibold text-white">
-                      {sortBy === "date_newest" && "Newest First"}
-                      {sortBy === "date_oldest" && "Oldest First"}
-                      {sortBy === "rating_highest" && "Highest Rating"}
-                      {sortBy === "rating_lowest" && "Lowest Rating"}
-                      {sortBy === "name_asc" && "A → Z"}
-                      {sortBy === "name_desc" && "Z → A"}
-                    </span>
-                  </button>
+                  {/* Visual Section Indicator */}
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-1.5 h-6 bg-red-600 rounded-full" />
+                    <h2 className="font-display font-black text-xl sm:text-2xl text-white uppercase tracking-wider">
+                      {homeSubTab === "movies" ? "Feature Movies" : homeSubTab === "series" ? "Feature Series" : "Feature Releases"}
+                    </h2>
+                  </div>
 
-                  {/* Reset Filters button visible only if actively searching */}
-                  {(searchQuery || selectedGenre !== "All Genres") && (
-                    <button
-                      onClick={resetFilters}
-                      className="px-3.5 py-2 rounded-xl bg-red-600/10 text-red-400 hover:bg-red-600/20 text-xs font-semibold border border-red-500/20 transition-colors cursor-pointer"
-                    >
-                      Reset Filters
-                    </button>
-                  )}
+                  {/* Filter / Sort Actions controls */}
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    
+                    {/* Custom Styled Inline Sort Dropdown */}
+                    <div className="relative inline-block text-left select-none" ref={sortDropdownRef}>
+                      <button
+                        onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/4 border border-white/5 hover:border-[#ff2d55]/40 hover:bg-[#ff2d55]/5 transition-all text-gray-300 hover:text-white cursor-pointer active:scale-95 shadow-inner group relative"
+                        title="Change listing sort option"
+                      >
+                        <ListOrdered size={14} className="text-[#ff2d55] group-hover:rotate-12 transition-transform duration-300" />
+                        <span className="text-[11px] font-mono font-bold text-gray-400 uppercase">Sort:</span>
+                        <span className="text-xs font-semibold text-white">
+                          {sortBy === "date_newest" && "Latest Added"}
+                          {sortBy === "date_oldest" && "Oldest Added"}
+                          {sortBy === "name_asc" && "A-Z"}
+                          {sortBy === "name_desc" && "Z-A"}
+                        </span>
+                        <ChevronDown size={12} className={`text-stone-400 transition-transform duration-300 ${isSortDropdownOpen ? "rotate-180 text-rose-500" : ""}`} />
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      <AnimatePresence>
+                        {isSortDropdownOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute right-0 mt-2 w-48 rounded-2xl border border-[#ff2d55]/30 bg-[#07070cdf]/90 backdrop-blur-xl shadow-[0_10px_35px_rgba(255,45,85,0.25)] p-2.5 z-50 overflow-hidden space-y-1 select-none"
+                          >
+                            {[
+                              { value: "date_newest", label: "Latest Added" },
+                              { value: "date_oldest", label: "Oldest Added" },
+                              { value: "name_asc", label: "A-Z" },
+                              { value: "name_desc", label: "Z-A" },
+                            ].map((opt) => {
+                              const isSelected = sortBy === opt.value;
+                              return (
+                                <button
+                                  key={opt.value}
+                                  onClick={() => {
+                                    setSortBy(opt.value);
+                                    setIsSortDropdownOpen(false);
+                                  }}
+                                  className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between transition-all duration-200 text-left text-xs font-semibold select-none cursor-pointer group/item ${
+                                    isSelected
+                                      ? "bg-[#ff2d55]/15 border border-[#ff2d55]/35 text-rose-400 shadow-[inset_0_1px_8px_rgba(255,45,85,0.1)] font-bold mb-0.5"
+                                      : "text-gray-400 hover:bg-[#ff2d55]/5 border border-transparent hover:border-[#ff2d55]/10 hover:text-white mb-0.5"
+                                  }`}
+                                >
+                                  <span>{opt.label}</span>
+                                  {isSelected && (
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#ff2d55] shadow-[0_0_8px_rgba(255,45,85,1)]" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Reset Filters button visible only if actively filtering */}
+                    {selectedGenre !== "All Genres" && (
+                      <button
+                        onClick={resetFilters}
+                        className="px-3.5 py-2 rounded-xl bg-red-600/10 text-red-400 hover:bg-red-600/20 text-xs font-semibold border border-red-500/20 transition-colors cursor-pointer"
+                      >
+                        Reset Filters
+                      </button>
+                    )}
+
+                  </div>
 
                 </div>
-
-              </div>
+              )}
 
               {/* Genre Pills Row (Aesthetic category chips) */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-                <div className="flex items-center gap-1.5 shrink-0 pr-4 border-r border-white/5">
-                  <Filter size={11} className="text-gray-500" />
-                  <span className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest">GENRES:</span>
-                </div>
+              {!searchQuery.trim() && (
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none animate-fade-in">
+                  <div className="flex items-center gap-1.5 shrink-0 pr-4 border-r border-[#ff2d55]/10">
+                    <Filter size={11} className="text-gray-500" />
+                    <span className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest">GENRES:</span>
+                  </div>
 
-                <div className="flex items-center gap-1.5">
-                  {genreOptions.map((genre) => (
-                    <button
-                      key={genre}
-                      onClick={() => setSelectedGenre(genre)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 ${
-                        selectedGenre === genre
-                          ? "bg-gradient-to-r from-red-600 to-amber-500 text-white shadow-lg shadow-red-950/20"
-                          : "bg-white/4 hover:bg-white/10 text-gray-400 hover:text-white"
-                      }`}
-                    >
-                      {genre}
-                    </button>
-                  ))}
+                  <div className="flex items-center gap-1.5">
+                    {genreOptions.map((genre) => (
+                      <button
+                        key={genre}
+                        onClick={() => setSelectedGenre(genre)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 cursor-pointer ${
+                          selectedGenre === genre
+                            ? "bg-gradient-to-r from-red-600 to-amber-500 text-white shadow-lg shadow-red-950/20"
+                            : "bg-white/4 hover:bg-white/10 text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        {genre}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Movies Grid */}
               {paginatedMovies.length > 0 ? (
@@ -1465,6 +1856,7 @@ export default function App() {
                           onOpenEpisodes={(s) => setSelectedSeries(s)}
                           isFavorite={watchlist.includes(movie.title)}
                           onToggleFavorite={(s) => handleToggleWatchlist(s as unknown as Movie)}
+                          onPlayTrailer={setActiveTrailerMovie}
                         />
                       ) : (
                         <MovieCard
@@ -1482,13 +1874,7 @@ export default function App() {
 
                   {/* Dynamic Glassmorphism Pagination controls */}
                   {totalPagesCount > 1 && (
-                    <div className="flex flex-col lg:flex-row items-center justify-between gap-4 pt-8 border-t border-white/5 bg-black/20 p-4 rounded-3xl backdrop-blur-md">
-                      <span className="text-xs text-gray-400 font-mono flex flex-wrap items-center gap-2 justify-center lg:justify-start">
-                      <span className="bg-red-950/40 text-red-500 border border-red-500/20 px-2.5 py-1 rounded-lg text-[11px] font-bold shrink-0">
-                        Page {safeCurrentPage}
-                      </span>
-                      </span>
-
+                    <div className="flex items-center justify-center gap-4 pt-8 border-t border-white/5 bg-black/20 p-4 rounded-3xl backdrop-blur-md">
                       <div className="flex flex-wrap items-center gap-1.5 justify-center">
                         {/* FIRST BUTTON - Shown only when page > 1 */}
                         {safeCurrentPage > 1 && (
@@ -1670,23 +2056,65 @@ export default function App() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2.5">
-                    {/* Sorting select node selector replaced with premium custom modal trigger */}
-                    <button
-                      onClick={() => setIsSortModalOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/4 border border-white/5 hover:border-[#ff2d55]/40 hover:bg-[#ff2d55]/5 transition-all text-gray-300 hover:text-white cursor-pointer active:scale-95 shadow-inner group"
-                      title="Change listing sort option"
-                    >
-                      <ListOrdered size={14} className="text-[#ff2d55] group-hover:animate-pulse" />
-                      <span className="text-[11px] font-mono font-bold text-gray-400 uppercase">Sort:</span>
-                      <span className="text-xs font-semibold text-white">
-                        {sortBy === "date_newest" && "Newest First"}
-                        {sortBy === "date_oldest" && "Oldest First"}
-                        {sortBy === "rating_highest" && "Highest Rating"}
-                        {sortBy === "rating_lowest" && "Lowest Rating"}
-                        {sortBy === "name_asc" && "A → Z"}
-                        {sortBy === "name_desc" && "Z → A"}
-                      </span>
-                    </button>
+                    {/* Custom Styled Inline Sort Dropdown */}
+                    <div className="relative inline-block text-left select-none" ref={sortDropdownRef}>
+                      <button
+                        onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/4 border border-white/5 hover:border-[#ff2d55]/40 hover:bg-[#ff2d55]/5 transition-all text-gray-300 hover:text-white cursor-pointer active:scale-95 shadow-inner group relative"
+                        title="Change listing sort option"
+                      >
+                        <ListOrdered size={14} className="text-[#ff2d55] group-hover:rotate-12 transition-transform duration-300" />
+                        <span className="text-[11px] font-mono font-bold text-gray-400 uppercase">Sort:</span>
+                        <span className="text-xs font-semibold text-white">
+                          {sortBy === "date_newest" && "Latest Added"}
+                          {sortBy === "date_oldest" && "Oldest Added"}
+                          {sortBy === "name_asc" && "A-Z"}
+                          {sortBy === "name_desc" && "Z-A"}
+                        </span>
+                        <ChevronDown size={12} className={`text-stone-400 transition-transform duration-300 ${isSortDropdownOpen ? "rotate-180 text-rose-500" : ""}`} />
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      <AnimatePresence>
+                        {isSortDropdownOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute right-0 mt-2 w-48 rounded-2xl border border-[#ff2d55]/30 bg-[#07070cdf]/90 backdrop-blur-xl shadow-[0_10px_35px_rgba(255,45,85,0.25)] p-2.5 z-55 overflow-hidden space-y-1 select-none"
+                          >
+                            {[
+                              { value: "date_newest", label: "Latest Added" },
+                              { value: "date_oldest", label: "Oldest Added" },
+                              { value: "name_asc", label: "A-Z" },
+                              { value: "name_desc", label: "Z-A" },
+                            ].map((opt) => {
+                              const isSelected = sortBy === opt.value;
+                              return (
+                                <button
+                                  key={opt.value}
+                                  onClick={() => {
+                                    setSortBy(opt.value);
+                                    setIsSortDropdownOpen(false);
+                                  }}
+                                  className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between transition-all duration-200 text-left text-xs font-semibold select-none cursor-pointer group/item ${
+                                    isSelected
+                                      ? "bg-[#ff2d55]/15 border border-[#ff2d55]/35 text-rose-400 shadow-[inset_0_1px_8px_rgba(255,45,85,0.1)] font-bold mb-0.5"
+                                      : "text-gray-400 hover:bg-[#ff2d55]/5 border border-transparent hover:border-[#ff2d55]/10 hover:text-white mb-0.5"
+                                  }`}
+                                >
+                                  <span>{opt.label}</span>
+                                  {isSelected && (
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#ff2d55] shadow-[0_0_8px_rgba(255,45,85,1)]" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </div>
 
                 </div>
@@ -1727,6 +2155,7 @@ export default function App() {
                             onOpenEpisodes={(s) => setSelectedSeries(s)}
                             isFavorite={watchlist.includes(movie.title)}
                             onToggleFavorite={(s) => handleToggleWatchlist(s as unknown as Movie)}
+                            onPlayTrailer={setActiveTrailerMovie}
                           />
                         ) : (
                           <MovieCard
@@ -1744,13 +2173,7 @@ export default function App() {
 
                     {/* Pagination control */}
                     {totalPagesCount > 1 && (
-                      <div className="flex flex-col lg:flex-row items-center justify-between gap-4 pt-8 border-t border-white/5 bg-black/20 p-4 rounded-3xl backdrop-blur-md">
-                        <span className="text-xs text-gray-400 font-mono flex flex-wrap items-center gap-2 justify-center lg:justify-start">
-                        <span className="bg-red-950/40 text-red-500 border border-red-500/20 px-2.5 py-1 rounded-lg text-[11px] font-bold shrink-0">
-                          Page {safeCurrentPage}
-                        </span>
-                        </span>
-
+                      <div className="flex items-center justify-center gap-4 pt-8 border-t border-white/5 bg-black/20 p-4 rounded-3xl backdrop-blur-md">
                         <div className="flex flex-wrap items-center gap-1.5 justify-center">
                           {safeCurrentPage > 1 && (
                             <button
@@ -1870,43 +2293,12 @@ export default function App() {
             onAdminAddSeries={handleAdminAddSeries}
             onAdminUpdateSeries={handleAdminUpdateSeries}
             onAdminDeleteSeries={handleAdminDeleteSeries}
+            isAdminLoggedIn={isAdminLoggedIn}
+            onAdminLoggedInChange={setIsAdminLoggedIn}
           />
         )}
 
       </main>
-
-      {/* Floating simulated Remote controls info bar (Fades in if connected) */}
-      {tvKeyboardActive && (
-        <div className="fixed bottom-4 left-4 right-4 xs:left-auto xs:right-4 z-40 p-4 rounded-2xl glass-panel max-w-md xs:max-w-sm border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.15)] space-y-3">
-          <div className="flex items-center justify-between">
-            <h5 className="text-xs font-bold font-mono text-emerald-400 uppercase tracking-wider flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-              Keyboard Remote Map
-            </h5>
-            <button 
-              onClick={() => setTvKeyboardActive(false)}
-              className="text-gray-500 hover:text-white"
-            >
-              <X size={12} />
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2 text-[10px] font-mono text-gray-400">
-            <div className="p-1 rounded bg-black/40 border border-white/5">
-              <strong className="text-white">SPACE:</strong> Play/Pause
-            </div>
-            <div className="p-1 rounded bg-black/40 border border-white/5">
-              <strong className="text-white">LEFT:</strong> Rewind -30s
-            </div>
-            <div className="p-1 rounded bg-black/40 border border-white/5">
-              <strong className="text-white">RIGHT:</strong> Fast -30s
-            </div>
-            <div className="p-1 rounded bg-black/40 border border-white/5">
-              <strong className="text-white">Esc/X:</strong> Close player
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Universal Floating Cinematic Video player (Mounted dynamically when selected) */}
       {(activePlayerMovie || activeTrailerMovie) && (
@@ -1936,20 +2328,23 @@ export default function App() {
           movie={activeDownloadMovie}
           onClose={() => setActiveDownloadMovie(null)}
           onWatch={setActivePlayerMovie}
+          onDownloadMovie={(title, quality, url) => {
+            setDownloadPendingInfo({ name: title, quality, url });
+          }}
         />
       )}
 
-      {/* Premium Glassmorphic Sort By Modal */}
+      {/* Download Confirmation Popup */}
       <AnimatePresence>
-        {isSortModalOpen && (
+        {downloadPendingInfo && (
           <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
-            {/* Dark glass backdrop blur layer */}
+            {/* Cinematic dark glass backdrop blur layer */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsSortModalOpen(false)}
-              className="absolute inset-0 bg-black/85 backdrop-blur-md"
+              onClick={() => setDownloadPendingInfo(null)}
+              className="absolute inset-0 bg-[#020204]/90 backdrop-blur-md"
             />
 
             {/* Premium Container */}
@@ -1958,82 +2353,57 @@ export default function App() {
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.95, y: 15, opacity: 0 }}
               transition={{ type: "spring", stiffness: 350, damping: 25 }}
-              className="w-full max-w-sm bg-gradient-to-b from-[#0e0204] via-[#050505] to-[#0d0103] border border-[#ff2d55]/30 rounded-[28px] p-6 sm:p-8 shadow-[0_20px_50px_rgba(255,45,85,0.25)] relative z-55 overflow-hidden space-y-6"
+              className="w-full max-w-md bg-gradient-to-b from-[#110204] via-[#050508] to-[#0d0103] border border-[#ff2d55]/30 rounded-[28px] p-6 sm:p-8 shadow-[0_20px_50px_rgba(255,45,85,0.25)] relative z-55 overflow-hidden text-center space-y-6"
             >
               {/* Outer soft ambient glow */}
-              <div className="absolute -inset-1 rounded-[28px] bg-gradient-to-tr from-[#ff2d55]/10 to-[#ff6b00]/10 blur-2xl pointer-events-none -z-10" />
+              <div className="absolute -inset-1 rounded-[28px] bg-gradient-to-tr from-[#ff2d55]/15 to-[#ff6b00]/10 blur-3xl pointer-events-none -z-10" />
 
-              <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                <div className="flex items-center gap-2">
-                  <ListOrdered size={18} className="text-[#ff2d55] drop-shadow-[0_0_8px_rgba(255,45,85,0.5)]" />
-                  <span className="font-sans font-black text-xs uppercase tracking-widest text-stone-200">Sort Catalogue</span>
+              <div className="flex flex-col items-center gap-4">
+                {/* Download Circle Icon with Pulse Effect */}
+                <div className="relative w-16 h-16 rounded-full bg-[#ff2d55]/10 border border-[#ff2d55]/30 flex items-center justify-center text-[#ff2d55] shadow-[0_0_20px_rgba(255,45,85,0.2)]">
+                  <Download size={28} className="animate-bounce" />
+                  <div className="absolute -inset-1 rounded-full bg-[#ff2d55]/5 blur-md animate-pulse -z-10" />
                 </div>
-                <button 
-                  onClick={() => setIsSortModalOpen(false)}
-                  className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
-                >
-                  <X size={14} />
-                </button>
+                
+                <div className="space-y-2">
+                  <h3 className="font-display font-black text-lg sm:text-xl text-white uppercase tracking-wider">
+                    Confirm Download
+                  </h3>
+                  <p className="text-xs text-gray-400 font-sans px-2">
+                    You are about to stream-route and prepare this media file for offline storage. Do you wish to proceed?
+                  </p>
+                </div>
+
+                {/* Media Item Badge */}
+                <div className="w-full py-3.5 px-4 rounded-xl bg-white/2 border border-white/5 shadow-inner">
+                  <p className="text-[10px] font-mono font-bold text-gray-400 uppercase tracking-wider mb-1">
+                    Ready to route ({downloadPendingInfo.quality}):
+                  </p>
+                  <p className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-stone-400 truncate">
+                    {downloadPendingInfo.name}
+                  </p>
+                </div>
               </div>
 
-              <div className="flex flex-col gap-2.5 pt-1">
-                {[
-                  { value: "date_newest", label: "Newest First" },
-                  { value: "date_oldest", label: "Oldest First" },
-                  { value: "rating_highest", label: "Highest Rating" },
-                  { value: "rating_lowest", label: "Lowest Rating" },
-                  { value: "name_asc", label: "A → Z" },
-                  { value: "name_desc", label: "Z → A" },
-                ].map((opt) => {
-                  const isSelected = sortBy === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      onClick={() => {
-                        setSortBy(opt.value);
-                        setTimeout(() => setIsSortModalOpen(false), 200);
-                      }}
-                      className={`w-full py-3.5 px-4 rounded-2xl flex items-center justify-between border transition-all cursor-pointer select-none font-sans group ${
-                        isSelected 
-                          ? "bg-[#ff2d55]/10 border-[#ff2d55]/40 shadow-[inset_0_1px_12px_rgba(255,45,85,0.15)] animate-pulse" 
-                          : "bg-white/2 border-white/5 hover:border-white/15 hover:bg-white/5"
-                      }`}
-                    >
-                      {/* Left: Indicator & Text */}
-                      <div className="flex items-center gap-3">
-                        {/* Custom Animated Circle Radio Button */}
-                        <div className="relative w-5 h-5 flex items-center justify-center shrink-0">
-                          <div className={`absolute inset-0 rounded-full border transition-all ${
-                            isSelected 
-                              ? "border-[#ff2d55] scale-100" 
-                              : "border-gray-600 scale-100 group-hover:border-gray-400"
-                          }`} />
-                          
-                          {/* Inner glowing selection circle */}
-                          <motion.div 
-                            initial={false}
-                            animate={{ scale: isSelected ? 1 : 0 }}
-                            className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-[#ff2d55] to-[#ff6b00] shadow-[0_0_10px_rgba(255,45,85,0.8)]"
-                          />
-                        </div>
-
-                        {/* Label Content */}
-                        <span className={`text-xs font-semibold tracking-wide transition-all ${
-                          isSelected 
-                            ? "text-transparent bg-clip-text bg-gradient-to-r from-[#ff2d55] to-amber-500 font-extrabold drop-shadow-[0_0_5px_rgba(255,45,85,0.2)]" 
-                            : "text-gray-300"
-                        }`}>
-                          {opt.label}
-                        </span>
-                      </div>
-
-                      {/* Right decoration */}
-                      {isSelected && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#ff2d55] shadow-[0_0_8px_rgba(255,45,85,1)] animate-pulse" />
-                      )}
-                    </button>
-                  );
-                })}
+              {/* Action controls */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  onClick={() => setDownloadPendingInfo(null)}
+                  className="py-3 px-4 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 active:scale-95 transition-all text-xs font-bold font-sans cursor-pointer tracking-wider uppercase select-none"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (downloadPendingInfo.url) {
+                      window.open(downloadPendingInfo.url, "_blank");
+                    }
+                    setDownloadPendingInfo(null);
+                  }}
+                  className="py-3 px-4 rounded-xl bg-gradient-to-r from-red-600 to-amber-500 hover:brightness-110 active:scale-95 transition-all text-xs font-black font-sans text-white cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.35)] tracking-wider uppercase select-none"
+                >
+                  Download Now
+                </button>
               </div>
             </motion.div>
           </div>

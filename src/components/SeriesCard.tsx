@@ -7,6 +7,7 @@ interface SeriesCardProps {
   onOpenEpisodes: (series: Series) => void;
   isFavorite?: boolean;
   onToggleFavorite?: (series: Series) => void;
+  onPlayTrailer?: (series: any) => void;
   key?: any;
 }
 
@@ -14,7 +15,8 @@ export default function SeriesCard({
   series,
   onOpenEpisodes,
   isFavorite = false,
-  onToggleFavorite
+  onToggleFavorite,
+  onPlayTrailer
 }: SeriesCardProps) {
   const numericRating = series.rating ? series.rating.replace("/10", "") : "8.5";
   const episodeCount = series.episodes ? series.episodes.length : 0;
@@ -151,6 +153,19 @@ export default function SeriesCard({
 
         {/* Interactive primary trigger block */}
         <div className="space-y-1.5 sm:space-y-2 pt-1.5 sm:pt-2 border-t border-white/5">
+          {(series as any).trailerUrl && (series as any).trailerUrl.trim() !== "" && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                if (onPlayTrailer) onPlayTrailer(series);
+              }}
+              className="w-full py-1.5 xs:py-2 rounded-lg sm:rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-400 font-display text-[9px] xs:text-[10px] sm:text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-98 select-none font-semibold"
+            >
+              <span>🎬 Watch Trailer</span>
+            </button>
+          )}
+
           <div className="grid grid-cols-1 gap-1.5 sm:gap-2">
             <button
               onClick={() => onOpenEpisodes(series)}

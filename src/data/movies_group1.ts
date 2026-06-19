@@ -18,7 +18,6 @@ export const moviesGroup1: Movie[] = [
       { label: "Download 1080p", url: "https://s32.cdnserver04.xyz/Moviesda.Mobi_-_Valavaara_2026_Original_1080p_HD_(3.4_GB).mp4", className: "p1080" },
     ],
     watchUrl: "https://s31.cdnserver04.xyz/Moviesda.Mobi_-_Valavaara_2026_Original_720p_HD.mp4?stream=1",
-    trailerUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
   },
   {
     title: "Parimala and Co (2026)",
@@ -37,7 +36,6 @@ export const moviesGroup1: Movie[] = [
       { label: "Download 1080p", url: "https://s12.cdnserver02.xyz/Parimala_and_Co_2026_HQ_PreDVD_1080p_HD.mp4", className: "p1080" },
     ],
     watchUrl: "https://s02.cdnserver01.xyz/Parimala_and_Co_2026_HQ_PreDVD_720p_HD.mp4?stream=1",
-    trailerUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
   },
   {
     title: "Peddi (2026)",
@@ -56,7 +54,6 @@ export const moviesGroup1: Movie[] = [
       { label: "Download 1080p", url: "https://s34.cdnserver04.xyz/Peddi_2026_HQ_PreDVD_1080p_HD.mp4", className: "p1080" },
     ],
     watchUrl: "https://s01.cdnserver01.xyz/Peddi_2026_HQ_PreDVD_720p_HD.mp4?stream=1",
-    trailerUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
   },
   {
     title: "The Rise of Ashoka (2026)",

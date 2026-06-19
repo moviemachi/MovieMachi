@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface Particle {
   id: number;
@@ -47,24 +47,24 @@ export default function BackgroundAurora() {
     <div className="fixed inset-0 -z-50 bg-[#09090f] overflow-hidden pointer-events-none select-none">
       {/* Aurora Lighting Spot 1 - Radical Red */}
       <div 
-        className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-red-600/10 blur-[120px] animate-aurora-slow"
+        className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-red-600/10 blur-[120px] animate-aurora-slow z-0"
         style={{ transformOrigin: "center center" }}
       />
 
       {/* Aurora Lighting Spot 2 - Velvet Deep Blue Glow */}
       <div 
-        className="absolute top-[40%] -right-[15%] w-[60%] h-[60%] rounded-full bg-blue-600/8 blur-[150px] animate-aurora-slower"
+        className="absolute top-[40%] -right-[15%] w-[60%] h-[60%] rounded-full bg-blue-600/8 blur-[150px] animate-aurora-slower z-0"
         style={{ transformOrigin: "center center" }}
       />
 
       {/* Aurora Lighting Spot 3 - Subtle Red Highlight */}
       <div 
-        className="absolute -bottom-[10%] left-[20%] w-[45%] h-[45%] rounded-full bg-red-900/5 blur-[120px]"
+        className="absolute -bottom-[10%] left-[20%] w-[45%] h-[45%] rounded-full bg-red-900/5 blur-[120px] z-0"
       />
 
       {/* Modern Grid Texture Overlay for depth */}
       <div 
-        className="absolute inset-0 opacity-[0.0125]"
+        className="absolute inset-0 opacity-[0.0125] z-10"
         style={{
           backgroundImage: `radial-gradient(circle, #ffffff 1px, transparent 1px)`,
           backgroundSize: "24px 24px",
@@ -75,7 +75,7 @@ export default function BackgroundAurora() {
       {particles.map((p) => (
         <div
           key={p.id}
-          className="absolute bg-white rounded-full transition-transform duration-75"
+          className="absolute bg-white rounded-full transition-transform duration-75 z-20 pointer-events-none"
           style={{
             left: `${p.x}%`,
             top: `${p.y}%`,

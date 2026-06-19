@@ -134,7 +134,8 @@ export function sanitizeMovieData(movie: any): Movie {
       label: l.label || "",
       url: l.url || "",
       className: l.className || ""
-    }))
+    })),
+    heroPosition: movie.heroPosition || "center"
   };
 }
 
@@ -184,7 +185,8 @@ export function sanitizeSeriesData(s: any): Series {
         episode: epNum,
         downloadUrl: ep.downloadUrl || ""
       };
-    })
+    }),
+    heroPosition: s.heroPosition || "center"
   };
 }
 
@@ -203,27 +205,7 @@ async function testConnection() {
 }
 testConnection();
 
-/**
- * Seed Firestore with initial movies list if it is completely empty
- */
-export async function seedMoviesIfEmpty() {
-  const path = "movies";
-  try {
-    const querySnapshot = await getDocs(collection(db, path));
-    if (querySnapshot.empty) {
-      console.log("[Firebase] Seeding catalog with default MovieMachi inventory...");
-      for (const m of allMovies) {
-        // Use sanitized title as document ID to avoid forbidden characters
-        const safeId = m.title.replace(/[^a-zA-Z0-9_\-]/g, "_");
-        const sanitized = sanitizeMovieData(m);
-        sanitized.id = safeId;
-        await setDoc(doc(db, path, safeId), sanitized);
-      }
-    }
-  } catch (err) {
-    console.error("[Firebase] Error checking/seeding default catalog:", err);
-  }
-}
+
 
 /**
  * Fetch all movies from Firestore
@@ -588,5 +570,60 @@ export async function deleteNotificationFromFirestore(notifId: string): Promise<
     await deleteDoc(doc(db, "notifications", notifId));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
+/**
+ * Automatically seeds the Firestore database exactly once if it hasn't been seeded yet
+ */
+export async function ensureDatabaseSeeded(): Promise<void> {
+  try {
+    // 1. Fast-path: Check client-side localStorage to instantly skip network/DB queries
+    if (typeof window !== "undefined") {
+      if (localStorage.getItem("moviemachi_catalog_is_seeded") === "true") {
+        console.log("[Firebase] Skipped seed check: client localStorage indicates seeding complete.");
+        return;
+      }
+    }
+
+    // 2. Query check: If movies collection has any documents, we are already seeded!
+    const querySnapshot = await getDocs(collection(db, "movies"));
+    if (!querySnapshot.empty) {
+      console.log("[Firebase] Skipping seeding: 'movies' collection already contains documents.");
+      if (typeof window !== "undefined") {
+        localStorage.setItem("moviemachi_catalog_is_seeded", "true");
+      }
+      return;
+    }
+
+    // 3. Document check fallback: Check the specific metadata doc
+    const seedRef = doc(db, "metadata", "catalog_seeding_state");
+    const seedSnap = await getDoc(seedRef);
+    if (seedSnap.exists() && seedSnap.data()?.seeded === true) {
+      console.log("[Firebase] Skipping seeding: Metadata document indicates seeded.");
+      if (typeof window !== "undefined") {
+        localStorage.setItem("moviemachi_catalog_is_seeded", "true");
+      }
+      return;
+    }
+
+    console.log("[Firebase] Seeding database with movies catalog...");
+    // Seed all default movies from allMovies
+    for (const m of allMovies) {
+      const docId = m.id || m.title.replace(/[^a-zA-Z0-9_\-]/g, "_");
+      const sanitized = sanitizeMovieData(m);
+      sanitized.id = docId;
+      await setDoc(doc(db, "movies", docId), sanitized);
+    }
+
+    // Mark as seeded
+    await setDoc(seedRef, { seeded: true, seededAt: Date.now() });
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("moviemachi_catalog_is_seeded", "true");
+    }
+    console.log("[Firebase] Database seeding completed successfully.");
+  } catch (error) {
+    console.error("[Firebase] Error during database seeding:", error);
   }
 }

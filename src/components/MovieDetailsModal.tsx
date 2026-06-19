@@ -7,12 +7,14 @@ interface MovieDetailsModalProps {
   movie: Movie | null;
   onClose: () => void;
   onWatch: (movie: Movie) => void;
+  onDownloadMovie?: (title: string, quality: string, url: string) => void;
 }
 
 export default function MovieDetailsModal({
   movie,
   onClose,
-  onWatch
+  onWatch,
+  onDownloadMovie
 }: MovieDetailsModalProps) {
   if (!movie) return null;
 
@@ -176,15 +178,27 @@ export default function MovieDetailsModal({
                       </div>
 
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <a
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-4 py-2 rounded-xl bg-white/5 hover:bg-neutral-800 text-gray-300 hover:text-white border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer leading-5 select-none"
-                        >
-                          <Download size={12} />
-                          <span>Download</span>
-                        </a>
+                        {onDownloadMovie ? (
+                          <button
+                            onClick={() => {
+                              onDownloadMovie(movie.movieName || movie.title || "Movie", quality, link.url);
+                            }}
+                            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-[#ff2d55]/20 hover:text-white hover:border-[#ff2d55]/30 text-gray-300 border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer leading-5 select-none"
+                          >
+                            <Download size={12} />
+                            <span>Download</span>
+                          </button>
+                        ) : (
+                          <a
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-neutral-800 text-gray-300 hover:text-white border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer leading-5 select-none"
+                          >
+                            <Download size={12} />
+                            <span>Download</span>
+                          </a>
+                        )}
                       </div>
                     </div>
                   );

@@ -24,6 +24,7 @@ export interface Movie {
   links: MovieLink[];
   watchUrl?: string;
   trailerUrl?: string;
+  heroPosition?: "top" | "center" | "bottom";
 }
 
 export interface SeriesEpisode {
@@ -47,6 +48,7 @@ export interface Series {
   rating: string;
   lastUpdated: string;
   episodes: SeriesEpisode[];
+  heroPosition?: "top" | "center" | "bottom";
 }
 
 export interface CommunityRequest {

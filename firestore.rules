@@ -26,6 +26,11 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Metadata rules for seeding status
+    match /metadata/{metadataId} {
+      allow read, write: if true;
+    }
+
     // Notifications collection rules
     match /notifications/{notificationId} {
       // General viewers can read/write their notifications
