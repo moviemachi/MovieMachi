@@ -36,7 +36,9 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 
 export default function App() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [homeSearchQuery, setHomeSearchQuery] = useState("");
+  const [watchlistSearchQuery, setWatchlistSearchQuery] = useState("");
+  const [historySearchQuery, setHistorySearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string>("All Genres");
   const [sortBy, setSortBy] = useState<string>("date_newest");
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
@@ -148,6 +150,30 @@ export default function App() {
   }, []);
 
   const [activeTab, setActiveTab ] = useState<string>("all"); // "all", "watching", "requests", "watchlist"
+
+  const prevTabRef = useRef("all");
+
+  useEffect(() => {
+    setHomeSearchQuery("");
+    setWatchlistSearchQuery("");
+    setHistorySearchQuery("");
+    prevTabRef.current = activeTab;
+  }, [activeTab]);
+
+  const searchQuery = 
+    activeTab === "all" ? homeSearchQuery :
+    activeTab === "watchlist" ? watchlistSearchQuery :
+    activeTab === "watching" ? historySearchQuery : "";
+
+  const setSearchQuery = (val: string) => {
+    if (activeTab === "all") {
+      setHomeSearchQuery(val);
+    } else if (activeTab === "watchlist") {
+      setWatchlistSearchQuery(val);
+    } else if (activeTab === "watching" || activeTab === "requests") {
+      setHistorySearchQuery(val);
+    }
+  };
 
   const [movies, setMovies] = useState<Movie[]>(() => {
     try {
@@ -600,10 +626,7 @@ export default function App() {
       language: req.language || "Tamil",
       rating: movieDetails.rating || "9.5/10",
       lastUpdated: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-      links: movieWatch ? [
-        { label: "Direct Play HLS 1080p", url: movieWatch, className: "p1080" },
-        { label: "Ultra High Bitrate 4K Stream", url: movieWatch, className: "K4" }
-      ] : [],
+      links: [],
       watchUrl: movieWatch || undefined,
       trailerUrl: movieTrailer || undefined
     };
@@ -1149,21 +1172,30 @@ export default function App() {
         activeEl.getAttribute("contenteditable") === "true"
       );
       
-      if (activePlayerMovie || isInputActive) {
+      const isAnyModalOpen = !!(
+        activePlayerMovie || 
+        activeTrailerMovie || 
+        selectedSeries || 
+        activeDownloadMovie || 
+        downloadPendingInfo
+      );
+
+      if (isAnyModalOpen || isInputActive) {
         return;
       }
 
-      const totalMs = sortedMovies.length;
-      const totalPgs = Math.ceil(totalMs / 20) || 1;
-
-      if (e.key === "PageDown" || e.key === "]" || (tvKeyboardActive && e.key === "ArrowRight")) {
+      if (e.key === "PageDown" || e.key === "]" || e.key === "ArrowRight") {
         e.preventDefault();
-        setCurrentPage(prev => Math.min(totalPgs, prev + 1));
-        scrollToCatalog();
-      } else if (e.key === "PageUp" || e.key === "[" || (tvKeyboardActive && e.key === "ArrowLeft")) {
+        if (currentPage < totalPagesCount) {
+          setCurrentPage(currentPage + 1);
+          scrollToCatalog();
+        }
+      } else if (e.key === "PageUp" || e.key === "[" || e.key === "ArrowLeft") {
         e.preventDefault();
-        setCurrentPage(prev => Math.max(1, prev - 1));
-        scrollToCatalog();
+        if (currentPage > 1) {
+          setCurrentPage(currentPage - 1);
+          scrollToCatalog();
+        }
       }
     };
 
@@ -1171,7 +1203,7 @@ export default function App() {
     return () => {
       window.removeEventListener("keydown", handleGlobalKeyDown);
     };
-  }, [sortedMovies, activePlayerMovie, tvKeyboardActive]);
+  }, [currentPage, totalPagesCount, activePlayerMovie, activeTrailerMovie, selectedSeries, activeDownloadMovie, downloadPendingInfo]);
 
   // Custom function to trigger resume playback from Continued Watching
   const handleResumeMovie = (movieTitle: string) => {
@@ -1536,7 +1568,20 @@ export default function App() {
               >
                 {latestMovies.map((slide, slideIdx) => {
                   const isActive = slideIdx === currentSlideIndex;
-                  const hasWatchUrl = slide.watchUrl && slide.watchUrl.trim() !== "";
+                  const isSeries = slide.type === "series";
+                  let hasWatchUrl = false;
+                  let hasDownloads = false;
+
+                  if (isSeries) {
+                    const seriesObj = slide as unknown as Series;
+                    if (seriesObj.episodes) {
+                      hasDownloads = seriesObj.episodes.some(ep => ep.downloadUrl && ep.downloadUrl.trim() !== "");
+                    }
+                    hasWatchUrl = !!(slide.watchUrl && slide.watchUrl.trim() !== "");
+                  } else {
+                    hasWatchUrl = !!(slide.watchUrl && slide.watchUrl.trim() !== "");
+                    hasDownloads = !!(slide.links && slide.links.some(l => l.url && l.url.trim() !== ""));
+                  }
                   
                   return (
                     <div
@@ -1604,27 +1649,33 @@ export default function App() {
 
                           {slide.type === "series" ? (
                             <>
-                              <button 
-                                onClick={() => {
-                                  handleSlideInteraction();
-                                  setSelectedSeries(slide as any);
-                                }}
-                                className="h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-red-650 hover:bg-red-550 border border-red-500/20 text-white font-display font-bold text-[9px] xs:text-[11px] sm:text-sm flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(239,68,68,0.35)]"
-                              >
-                                <Play size={11} fill="currentColor" className="xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
-                                <span>Watch Online</span>
-                              </button>
+                              {hasWatchUrl && (
+                                <button 
+                                  onClick={() => {
+                                    handleSlideInteraction();
+                                    setSelectedSeries(slide as any);
+                                  }}
+                                  className="h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-red-650 hover:bg-red-550 border border-red-500/20 text-white font-display font-bold text-[9px] xs:text-[11px] sm:text-sm flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(239,68,68,0.35)]"
+                                >
+                                  <Play size={11} fill="currentColor" className="xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
+                                  <span>Watch Online</span>
+                                </button>
+                              )}
 
-                              <button 
-                                onClick={() => {
-                                  handleSlideInteraction();
-                                  setSelectedSeries(slide as any);
-                                }}
-                                className="h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-white/5 hover:bg-white/10 text-gray-200 font-display font-bold text-[9px] xs:text-[11px] sm:text-sm border border-white/10 flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer"
-                              >
-                                <Download size={11} className="xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
-                                <span>Downloads</span>
-                              </button>
+                              {hasDownloads && (
+                                <button 
+                                  onClick={() => {
+                                    handleSlideInteraction();
+                                    setSelectedSeries(slide as any);
+                                  }}
+                                  className={`h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-white/5 hover:bg-white/10 text-gray-200 font-display font-bold text-[9px] xs:text-[11px] sm:text-sm border border-white/10 flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer ${
+                                    !hasWatchUrl ? "shadow-[0_0_20px_rgba(239,68,68,0.25)] bg-red-650 hover:bg-red-550 border border-red-500/20 text-white" : ""
+                                  }`}
+                                >
+                                  <Download size={11} className="xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
+                                  <span>Downloads</span>
+                                </button>
+                              )}
                             </>
                           ) : (
                             <>
@@ -1641,18 +1692,20 @@ export default function App() {
                                 </button>
                               )}
 
-                              <button 
-                                onClick={() => {
-                                  handleSlideInteraction();
-                                  setActiveDownloadMovie(slide);
-                                }}
-                                className={`h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-white/5 hover:bg-white/10 text-gray-200 font-display font-bold text-[9px] xs:text-[11px] sm:text-sm border border-white/10 flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer ${
-                                  !hasWatchUrl ? "shadow-[0_0_20px_rgba(239,68,68,0.25)] bg-red-650 hover:bg-red-550 border border-red-500/20 text-white" : ""
-                                }`}
-                              >
-                                <Download size={11} className="xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
-                                <span>Downloads</span>
-                              </button>
+                              {hasDownloads && (
+                                <button 
+                                  onClick={() => {
+                                    handleSlideInteraction();
+                                    setActiveDownloadMovie(slide);
+                                  }}
+                                  className={`h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-white/5 hover:bg-white/10 text-gray-200 font-display font-bold text-[9px] xs:text-[11px] sm:text-sm border border-white/10 flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer ${
+                                    !hasWatchUrl ? "shadow-[0_0_20px_rgba(239,68,68,0.25)] bg-red-650 hover:bg-red-550 border border-red-500/20 text-white" : ""
+                                  }`}
+                                >
+                                  <Download size={11} className="xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
+                                  <span>Downloads</span>
+                                </button>
+                              )}
                             </>
                           )}
 

@@ -20,6 +20,7 @@ export default function SeriesCard({
 }: SeriesCardProps) {
   const numericRating = series.rating ? series.rating.replace("/10", "") : "8.5";
   const episodeCount = series.episodes ? series.episodes.length : 0;
+  const hasDownloads = series.episodes && series.episodes.some(ep => ep.downloadUrl && ep.downloadUrl.trim() !== "");
 
   return (
     <div className="group relative rounded-2xl overflow-hidden glass-card hover:shadow-[0_0_30px_rgba(239,68,68,0.25)] transition-all duration-500 border border-white/6 flex flex-col min-h-[290px] xs:min-h-[340px] sm:min-h-[450px] h-full">
@@ -95,14 +96,16 @@ export default function SeriesCard({
         )}
 
         {/* Hover overlay showcasing center play trigger icon */}
-        <div 
-          className="absolute inset-0 bg-black/30 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto cursor-pointer" 
-          onClick={() => onOpenEpisodes(series)}
-        >
-          <div className="w-10 h-10 xs:w-14 xs:h-14 rounded-full bg-red-600/95 flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:bg-red-500">
-            <List size={18} className="text-white xs:w-6 xs:h-6" />
+        {hasDownloads && (
+          <div 
+            className="absolute inset-0 bg-black/30 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto cursor-pointer" 
+            onClick={() => onOpenEpisodes(series)}
+          >
+            <div className="w-10 h-10 xs:w-14 xs:h-14 rounded-full bg-red-600/95 flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:bg-red-500">
+              <List size={18} className="text-white xs:w-6 xs:h-6" />
+            </div>
           </div>
-        </div>
+        )}
 
       </div>
 
@@ -166,15 +169,17 @@ export default function SeriesCard({
             </button>
           )}
 
-          <div className="grid grid-cols-1 gap-1.5 sm:gap-2">
-            <button
-              onClick={() => onOpenEpisodes(series)}
-              className="py-1.5 px-2 rounded-lg sm:rounded-xl bg-white/4 hover:bg-white/10 text-gray-300 hover:text-white border border-white/5 font-display text-[9px] xs:text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors"
-            >
-              <Download size={9} className="xs:w-3 xs:h-3" />
-              <span className="truncate">Downloads</span>
-            </button>
-          </div>
+          {hasDownloads && (
+            <div className="grid grid-cols-1 gap-1.5 sm:gap-2">
+              <button
+                onClick={() => onOpenEpisodes(series)}
+                className="py-1.5 px-2 rounded-lg sm:rounded-xl bg-red-650 hover:bg-red-550 border border-[#ff2d55]/20 text-white font-display text-[9px] xs:text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer hover:shadow-[0_0_12px_rgba(239,68,68,0.2)] transition-all"
+              >
+                <Download size={9} className="xs:w-3 xs:h-3" />
+                <span className="truncate">Downloads</span>
+              </button>
+            </div>
+          )}
         </div>
 
       </div>

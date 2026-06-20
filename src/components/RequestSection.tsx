@@ -612,10 +612,6 @@ export default function RequestSection({
       compiledLinks.push({ label: "Ultra High Bitrate 4K UHD", url: cmsUrl4K.trim(), className: "K4" });
     }
 
-    if (compiledLinks.length === 0 && cmsWatchUrl.trim()) {
-      compiledLinks.push({ label: "Direct Play HLS 1080p", url: cmsWatchUrl.trim(), className: "p1080" });
-      compiledLinks.push({ label: "Ultra High Bitrate 4K Stream", url: cmsWatchUrl.trim(), className: "K4" });
-    }
 
     const movieObj: Movie = {
       title: cmsTitle.trim(),
@@ -2298,7 +2294,7 @@ export default function RequestSection({
                     <form 
                       onSubmit={(e) => {
                         e.preventDefault();
-                        if (adminUsernameInput.trim() === "admin" && adminPasswordInput === "moviemachi2026") {
+                        if (adminUsernameInput.trim() === "25226040" && adminPasswordInput === "DEEPAK@2007") {
                           setIsCurrentlyAdmin(true);
                           setAdminLoginError("");
                           setAdminPasswordInput("");

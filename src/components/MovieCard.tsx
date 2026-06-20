@@ -22,6 +22,8 @@ export default function MovieCard({
 }: MovieCardProps) {
   // Extract number from rating or default
   const numericRating = movie.rating ? movie.rating.replace("/10", "") : "8.5";
+  const hasWatchUrl = !!(movie.watchUrl && movie.watchUrl.trim() !== "");
+  const hasDownloads = !!(movie.links && movie.links.some(l => l.url && l.url.trim() !== ""));
 
   return (
     <div className="group relative rounded-2xl overflow-hidden glass-card hover:shadow-[0_0_30px_rgba(239,68,68,0.25)] transition-all duration-500 border border-white/6 flex flex-col min-h-[290px] xs:min-h-[340px] sm:min-h-[450px] h-full">
@@ -94,16 +96,26 @@ export default function MovieCard({
         )}
 
         {/* Hover overlay showcasing center play trigger icon */}
-        <div 
-          className="absolute inset-0 bg-black/30 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto cursor-pointer" 
-          onClick={() => {
-            onDownload(movie);
-          }}
-        >
-          <div className="w-10 h-10 xs:w-14 xs:h-14 rounded-full bg-red-650/95 flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:bg-red-500">
-            <Download size={16} className="text-white xs:w-5 xs:h-5" />
+        {(hasWatchUrl || hasDownloads) && (
+          <div 
+            className="absolute inset-0 bg-black/30 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto cursor-pointer" 
+            onClick={() => {
+              if (hasWatchUrl && !hasDownloads) {
+                onWatch(movie);
+              } else {
+                onDownload(movie);
+              }
+            }}
+          >
+            <div className="w-10 h-10 xs:w-14 xs:h-14 rounded-full bg-red-650/95 flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:bg-red-500">
+              {hasWatchUrl && !hasDownloads ? (
+                <Play size={16} fill="currentColor" className="text-white xs:w-5 xs:h-5 ml-0.5" />
+              ) : (
+                <Download size={16} className="text-white xs:w-5 xs:h-5" />
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
       </div>
 
@@ -169,25 +181,31 @@ export default function MovieCard({
             </button>
           )}
 
-          <div className={`${movie.watchUrl && movie.watchUrl.trim() !== "" ? "grid grid-cols-2" : "grid grid-cols-1"} gap-1.5 sm:gap-2`}>
-            {movie.watchUrl && movie.watchUrl.trim() !== "" && (
-              <button
-                onClick={() => onWatch(movie)}
-                className="py-1.5 px-2 rounded-lg sm:rounded-xl bg-red-650 hover:bg-red-550 border border-red-500/25 text-white font-display text-[9px] xs:text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer hover:shadow-[0_0_12px_rgba(239,68,68,0.2)] transition-all"
-              >
-                <Play size={9} fill="currentColor" className="xs:w-3 xs:h-3" />
-                <span className="truncate">Watch Online</span>
-              </button>
-            )}
+          {(hasWatchUrl || hasDownloads) && (
+            <div className={`grid ${hasWatchUrl && hasDownloads ? "grid-cols-2" : "grid-cols-1"} gap-1.5 sm:gap-2`}>
+              {hasWatchUrl && (
+                <button
+                  onClick={() => onWatch(movie)}
+                  className="py-1.5 px-2 rounded-lg sm:rounded-xl bg-red-650 hover:bg-red-550 border border-red-500/25 text-white font-display text-[9px] xs:text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer hover:shadow-[0_0_12px_rgba(239,68,68,0.2)] transition-all"
+                >
+                  <Play size={9} fill="currentColor" className="xs:w-3 xs:h-3" />
+                  <span className="truncate">Watch Online</span>
+                </button>
+              )}
 
-            <button
-              onClick={() => onDownload(movie)}
-              className="py-1.5 px-2 rounded-lg sm:rounded-xl bg-white/4 hover:bg-white/10 text-gray-300 hover:text-white border border-white/5 font-display text-[9px] xs:text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors"
-            >
-              <Download size={9} className="xs:w-3 xs:h-3" />
-              <span className="truncate">Downloads</span>
-            </button>
-          </div>
+              {hasDownloads && (
+                <button
+                  onClick={() => onDownload(movie)}
+                  className={`py-1.5 px-2 rounded-lg sm:rounded-xl text-gray-300 hover:text-white border border-white/5 font-display text-[9px] xs:text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors ${
+                    !hasWatchUrl ? "bg-red-650 hover:bg-red-550 border-red-500/25 text-white hover:shadow-[0_0_12px_rgba(239,68,68,0.2)]" : "bg-white/4 hover:bg-white/10"
+                  }`}
+                >
+                  <Download size={9} className="xs:w-3 xs:h-3" />
+                  <span className="truncate">Downloads</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
       </div>

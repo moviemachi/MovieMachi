@@ -148,67 +148,65 @@ export default function MovieDetailsModal({
               </div>
             )}
 
-            <div className="pb-3 border-b border-white/5 mb-3 shrink-0">
-              <h4 className="font-display font-extrabold text-[#fff] text-sm uppercase tracking-wider">
-                Downloads
-              </h4>
-            </div>
-
-            {/* List panel */}
-            <div className="flex-1 overflow-y-auto pr-1 space-y-2.5 scroll-smooth max-h-[40vh] md:max-h-none">
-              {availableQualityRows.length > 0 ? (
-                availableQualityRows.map(({ quality, link }) => {
-                  if (!link) return null;
-                  return (
-                    <div
-                      key={quality}
-                      className="p-3.5 rounded-2xl bg-[#0b0b11] border border-white/5 hover:border-[#ff2d55]/30 hover:bg-[#ff2d55]/3 transition-all flex items-center justify-between gap-3 group/ep"
-                    >
-                      <div className="min-w-0 flex-1 flex items-center gap-3">
-                        <div className="w-11 h-9 rounded-xl bg-gradient-to-br from-[#1c1c28] to-[#0d0d14] border border-white/5 group-hover/ep:border-[#ff2d55]/30 flex items-center justify-center shrink-0">
-                          <span className="text-[10px] font-mono font-black text-rose-500 group-hover/ep:scale-105 transition-transform">
-                            {quality}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-xs sm:text-sm font-semibold text-gray-300 group-hover/ep:text-white transition-colors">
-                            {quality} Resolution
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {onDownloadMovie ? (
-                          <button
-                            onClick={() => {
-                              onDownloadMovie(movie.movieName || movie.title || "Movie", quality, link.url);
-                            }}
-                            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-[#ff2d55]/20 hover:text-white hover:border-[#ff2d55]/30 text-gray-300 border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer leading-5 select-none"
-                          >
-                            <Download size={12} />
-                            <span>Download</span>
-                          </button>
-                        ) : (
-                          <a
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-neutral-800 text-gray-300 hover:text-white border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer leading-5 select-none"
-                          >
-                            <Download size={12} />
-                            <span>Download</span>
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-12 text-stone-500 text-xs font-bold uppercase tracking-widest border border-dashed border-white/5 rounded-2xl bg-[#0b0b11] select-none">
-                  No Download Quality Available
+            {availableQualityRows.length > 0 && (
+              <>
+                <div className="pb-3 border-b border-white/5 mb-3 shrink-0">
+                  <h4 className="font-display font-extrabold text-[#fff] text-sm uppercase tracking-wider">
+                    Downloads
+                  </h4>
                 </div>
-              )}
-            </div>
+
+                {/* List panel */}
+                <div className="flex-1 overflow-y-auto pr-1 space-y-2.5 scroll-smooth max-h-[40vh] md:max-h-none">
+                  {availableQualityRows.map(({ quality, link }) => {
+                    if (!link) return null;
+                    return (
+                      <div
+                        key={quality}
+                        className="p-3.5 rounded-2xl bg-[#0b0b11] border border-white/5 hover:border-[#ff2d55]/30 hover:bg-[#ff2d55]/3 transition-all flex items-center justify-between gap-3 group/ep"
+                      >
+                        <div className="min-w-0 flex-1 flex items-center gap-3">
+                          <div className="w-11 h-9 rounded-xl bg-gradient-to-br from-[#1c1c28] to-[#0d0d14] border border-white/5 group-hover/ep:border-[#ff2d55]/30 flex items-center justify-center shrink-0">
+                            <span className="text-[10px] font-mono font-black text-rose-500 group-hover/ep:scale-105 transition-transform">
+                              {quality}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-xs sm:text-sm font-semibold text-gray-300 group-hover/ep:text-white transition-colors">
+                              {quality} Resolution
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {onDownloadMovie ? (
+                            <button
+                              onClick={() => {
+                                onDownloadMovie(movie.movieName || movie.title || "Movie", quality, link.url);
+                              }}
+                              className="px-4 py-2 rounded-xl bg-white/5 hover:bg-[#ff2d55]/20 hover:text-white hover:border-[#ff2d55]/30 text-gray-300 border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer leading-5 select-none"
+                            >
+                              <Download size={12} />
+                              <span>Download</span>
+                            </button>
+                          ) : (
+                            <a
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-4 py-2 rounded-xl bg-white/5 hover:bg-neutral-800 text-gray-300 hover:text-white border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer leading-5 select-none"
+                            >
+                              <Download size={12} />
+                              <span>Download</span>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         </motion.div>
       </div>

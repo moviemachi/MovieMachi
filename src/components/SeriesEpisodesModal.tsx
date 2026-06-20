@@ -143,10 +143,18 @@ export default function SeriesEpisodesModal({
                       </div>
 
                       {hasUrl ? (
-                        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => onPlayEpisode(series, ep.episode)}
+                            className="px-3.5 py-2 rounded-xl bg-red-650 hover:bg-red-550 border border-red-500/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer leading-5 select-none shadow-sm"
+                          >
+                            <Play size={12} fill="currentColor" />
+                            <span>Watch Online</span>
+                          </button>
+
                           <button
                             onClick={() => onDownloadEpisode(series, ep.episode)}
-                            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-neutral-800 text-gray-300 hover:text-white border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer leading-5 select-none"
+                            className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-neutral-800 text-gray-300 hover:text-white border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer leading-5 select-none"
                           >
                             <Download size={12} />
                             <span>Download</span>
