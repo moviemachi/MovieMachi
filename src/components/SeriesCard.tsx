@@ -23,7 +23,10 @@ export default function SeriesCard({
   const hasDownloads = series.episodes && series.episodes.some(ep => ep.downloadUrl && ep.downloadUrl.trim() !== "");
 
   return (
-    <div className="group relative rounded-2xl overflow-hidden glass-card hover:shadow-[0_0_30px_rgba(239,68,68,0.25)] transition-all duration-500 border border-white/6 flex flex-col min-h-[290px] xs:min-h-[340px] sm:min-h-[450px] h-full">
+    <div 
+      onClick={() => onOpenEpisodes(series)}
+      className="group relative rounded-2xl overflow-hidden glass-card hover:shadow-[0_0_30px_rgba(239,68,68,0.25)] transition-all duration-500 border border-white/6 flex flex-col min-h-[240px] xs:min-h-[290px] sm:min-h-[390px] h-full cursor-pointer select-none"
+    >
       
       {/* Upper Poster viewport wrapper with scaling */}
       <div className="relative flex-1 overflow-hidden bg-neutral-900 pointer-events-none">
@@ -98,11 +101,10 @@ export default function SeriesCard({
         {/* Hover overlay showcasing center play trigger icon */}
         {hasDownloads && (
           <div 
-            className="absolute inset-0 bg-black/30 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto cursor-pointer" 
-            onClick={() => onOpenEpisodes(series)}
+            className="absolute inset-0 bg-black/30 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" 
           >
-            <div className="w-10 h-10 xs:w-14 xs:h-14 rounded-full bg-red-600/95 flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:bg-red-500">
-              <List size={18} className="text-white xs:w-6 xs:h-6" />
+            <div className="w-10 h-10 xs:w-14 xs:h-14 rounded-full bg-red-650/95 flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(239,68,68,0.4)]">
+              <Play size={16} fill="currentColor" className="text-white xs:w-5 xs:h-5 ml-0.5" />
             </div>
           </div>
         )}
@@ -115,8 +117,7 @@ export default function SeriesCard({
         {/* Title and Release date meta information */}
         <div>
           <h4 
-            onClick={() => onOpenEpisodes(series)}
-            className="font-display font-medium text-xs xs:text-sm sm:text-base text-white hover:text-red-400 transition-colors cursor-pointer line-clamp-1 truncate"
+            className="font-display font-medium text-xs xs:text-sm sm:text-base text-white hover:text-red-400 transition-colors line-clamp-1 truncate"
           >
             {series.seriesName} - Season {series.seasonNumber}
           </h4>
@@ -152,34 +153,6 @@ export default function SeriesCard({
               {g}
             </span>
           ))}
-        </div>
-
-        {/* Interactive primary trigger block */}
-        <div className="space-y-1.5 sm:space-y-2 pt-1.5 sm:pt-2 border-t border-white/5">
-          {(series as any).trailerUrl && (series as any).trailerUrl.trim() !== "" && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                if (onPlayTrailer) onPlayTrailer(series);
-              }}
-              className="w-full py-1.5 xs:py-2 rounded-lg sm:rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-400 font-display text-[9px] xs:text-[10px] sm:text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-98 select-none font-semibold"
-            >
-              <span>🎬 Watch Trailer</span>
-            </button>
-          )}
-
-          {hasDownloads && (
-            <div className="grid grid-cols-1 gap-1.5 sm:gap-2">
-              <button
-                onClick={() => onOpenEpisodes(series)}
-                className="py-1.5 px-2 rounded-lg sm:rounded-xl bg-red-650 hover:bg-red-550 border border-[#ff2d55]/20 text-white font-display text-[9px] xs:text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer hover:shadow-[0_0_12px_rgba(239,68,68,0.2)] transition-all"
-              >
-                <Download size={9} className="xs:w-3 xs:h-3" />
-                <span className="truncate">Downloads</span>
-              </button>
-            </div>
-          )}
         </div>
 
       </div>

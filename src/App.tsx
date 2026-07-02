@@ -31,11 +31,16 @@ import RequestSection from "./components/RequestSection";
 import { 
   Play, Download, Star, Sparkles, Filter, ListOrdered, 
   Tv, Film, X, Laptop, ShieldCheck, CheckCircle2, Info, Compass,
-  ChevronLeft, ChevronRight, Heart, Flame, ChevronDown
+  ChevronLeft, ChevronRight, Heart, Flame, ChevronDown,
+  WifiOff, RefreshCw, Home, Globe, AlertTriangle, Database
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 export default function App() {
+  // Lifted Notification Panel States for Back-navigation control
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isNotifMobileOpen, setIsNotifMobileOpen] = useState(false);
+
   const [homeSearchQuery, setHomeSearchQuery] = useState("");
   const [watchlistSearchQuery, setWatchlistSearchQuery] = useState("");
   const [historySearchQuery, setHistorySearchQuery] = useState("");
@@ -47,7 +52,96 @@ export default function App() {
     name: string;
     quality: string;
     url: string;
+    image?: string;
   } | null>(null);
+
+  // Players and Modals
+  const [activePlayerMovie, setActivePlayerMovie] = useState<Movie | null>(null);
+  const [activeDownloadMovie, setActiveDownloadMovie] = useState<Movie | null>(null);
+  const [activeTrailerMovie, setActiveTrailerMovie] = useState<Movie | null>(null);
+  const [selectedSeries, setSelectedSeries] = useState<Series | null>(null);
+  const [premiumMessage, setPremiumMessage] = useState<string | null>(null);
+
+  // Auto-hide premium message toast
+  useEffect(() => {
+    if (premiumMessage) {
+      const timer = setTimeout(() => {
+        setPremiumMessage(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [premiumMessage]);
+
+  const handlePlayMedia = (item: Movie | Series | { type: "episode"; series: Series; episodeNumber: number }) => {
+    let watchUrl: string | undefined = undefined;
+    let downloadUrl: string | undefined = undefined;
+    let virtualMovie: Movie | null = null;
+
+    if (item && 'type' in item && item.type === "episode") {
+      const ep = item.series.episodes?.find(e => (e.episodeNumber === item.episodeNumber || e.episode === item.episodeNumber));
+      if (ep) {
+        downloadUrl = ep.downloadUrl;
+        virtualMovie = {
+          id: `${item.series.id}_E${item.episodeNumber}`,
+          title: `${item.series.seriesName} - Season ${item.series.seasonNumber} - Episode ${item.episodeNumber}`,
+          movieName: `${item.series.seriesName} - S${item.series.seasonNumber}E${item.episodeNumber}`,
+          image: item.series.image,
+          director: item.series.director,
+          starring: item.series.starring,
+          genres: item.series.genres,
+          language: item.series.language,
+          quality: item.series.quality,
+          rating: item.series.rating,
+          lastUpdated: item.series.lastUpdated,
+          watchUrl: "",
+          links: []
+        };
+      }
+    } else if (item && 'type' in item && item.type === "series") {
+      watchUrl = (item as any).watchUrl;
+      const firstEp = item.episodes?.find(ep => ep.downloadUrl && ep.downloadUrl.trim() !== "");
+      downloadUrl = firstEp?.downloadUrl;
+      
+      virtualMovie = {
+        id: item.id,
+        title: item.title,
+        movieName: item.seriesName,
+        image: item.image,
+        director: item.director,
+        starring: item.starring,
+        genres: item.genres,
+        language: item.language,
+        quality: item.quality,
+        rating: item.rating,
+        lastUpdated: item.lastUpdated,
+        watchUrl: watchUrl || "",
+        links: []
+      };
+    } else if (item) {
+      const movieItem = item as Movie;
+      watchUrl = movieItem.watchUrl;
+      downloadUrl = movieItem.links?.find(l => l.url && l.url.trim() !== "")?.url;
+      virtualMovie = movieItem;
+    }
+
+    if (watchUrl && watchUrl.trim() !== "") {
+      if (virtualMovie) {
+        setActivePlayerMovie({
+          ...virtualMovie,
+          watchUrl: watchUrl
+        });
+      }
+    } else if (downloadUrl && downloadUrl.trim() !== "") {
+      if (virtualMovie) {
+        setActivePlayerMovie({
+          ...virtualMovie,
+          watchUrl: downloadUrl
+        });
+      }
+    } else {
+      setPremiumMessage("Watch link not available.");
+    }
+  };
 
   // Active background and hover state logic completely reverted
 
@@ -447,7 +541,7 @@ export default function App() {
            (m.title && m.title.toLowerCase().includes(title.toLowerCase()))
     );
     if (matchedMovie) {
-      setActivePlayerMovie(matchedMovie);
+      handlePlayMedia(matchedMovie);
       return;
     }
 
@@ -855,7 +949,7 @@ export default function App() {
         const notif = new Notification(title, options);
         notif.onclick = () => {
           window.focus();
-          setActivePlayerMovie(movieRef);
+          handlePlayMedia(movieRef);
           notif.close();
         };
       } catch (err) {
@@ -868,7 +962,7 @@ export default function App() {
       if (event.data && event.data.type === "OPEN_MOVIE" && event.data.movieTitle) {
         const matchedMovie = movies.find(m => m.title === event.data.movieTitle);
         if (matchedMovie) {
-          setActivePlayerMovie(matchedMovie);
+          handlePlayMedia(matchedMovie);
         }
       }
     };
@@ -881,7 +975,7 @@ export default function App() {
       if (openMovieTitle) {
         const matchedMovie = movies.find(m => m.title === openMovieTitle);
         if (matchedMovie) {
-          setActivePlayerMovie(matchedMovie);
+          handlePlayMedia(matchedMovie);
           // Clean the URL parameters so sequential refreshes don't auto-popup the player
           const cleanUrl = window.location.pathname;
           window.history.replaceState({}, document.title, cleanUrl);
@@ -923,35 +1017,16 @@ export default function App() {
     };
   }, [movies, requests, userId]);
 
-  // Players and Modals
-  const [activePlayerMovie, setActivePlayerMovie] = useState<Movie | null>(null);
-  const [activeDownloadMovie, setActiveDownloadMovie] = useState<Movie | null>(null);
-  const [activeTrailerMovie, setActiveTrailerMovie] = useState<Movie | null>(null);
-  const [selectedSeries, setSelectedSeries] = useState<Series | null>(null);
-
+  // Players and Modals hooks (moved to top of component body)
+  
   // Modals backdrop binding reverted
 
   const handlePlayEpisode = (seriesItem: Series, episodeNum: number) => {
-    const episodeObj = seriesItem.episodes?.find(ep => (ep.episodeNumber === episodeNum || ep.episode === episodeNum));
-    if (episodeObj && episodeObj.downloadUrl) {
-      const url = episodeObj.downloadUrl;
-      const virtualMovie: Movie = {
-        id: `${seriesItem.id}_E${episodeNum}`,
-        title: `${seriesItem.seriesName} - Season ${seriesItem.seasonNumber} - Episode ${episodeNum}`,
-        movieName: `${seriesItem.seriesName} - S${seriesItem.seasonNumber}E${episodeNum}`,
-        image: seriesItem.image,
-        director: seriesItem.director,
-        starring: seriesItem.starring,
-        genres: seriesItem.genres,
-        language: seriesItem.language,
-        quality: seriesItem.quality,
-        rating: seriesItem.rating,
-        lastUpdated: seriesItem.lastUpdated,
-        watchUrl: url,
-        links: []
-      };
-      setActivePlayerMovie(virtualMovie);
-    }
+    handlePlayMedia({
+      type: "episode",
+      series: seriesItem,
+      episodeNumber: episodeNum
+    });
   };
 
   const handleDownloadEpisode = (seriesItem: Series, episodeNum: number) => {
@@ -960,7 +1035,8 @@ export default function App() {
       setDownloadPendingInfo({
         name: `${seriesItem.seriesName} - Episode ${episodeNum}`,
         quality: "Episode Download",
-        url: episodeObj.downloadUrl
+        url: episodeObj.downloadUrl,
+        image: seriesItem.image
       });
     }
   };
@@ -988,6 +1064,150 @@ export default function App() {
 
   // Movie pagination state
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Popstate history navigation sync
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state || {};
+      
+      // Update all React states to match popped history state
+      setActiveTab(state.activeTab !== undefined ? state.activeTab : "all");
+      setCurrentPage(state.currentPage !== undefined ? state.currentPage : 1);
+      setHomeSearchQuery(state.homeSearchQuery !== undefined ? state.homeSearchQuery : "");
+      setWatchlistSearchQuery(state.watchlistSearchQuery !== undefined ? state.watchlistSearchQuery : "");
+      setHistorySearchQuery(state.historySearchQuery !== undefined ? state.historySearchQuery : "");
+      setActiveDownloadMovie(state.activeDownloadMovie !== undefined ? state.activeDownloadMovie : null);
+      setSelectedSeries(state.selectedSeries !== undefined ? state.selectedSeries : null);
+      setActivePlayerMovie(state.activePlayerMovie !== undefined ? state.activePlayerMovie : null);
+      setActiveTrailerMovie(state.activeTrailerMovie !== undefined ? state.activeTrailerMovie : null);
+      setIsNotifOpen(state.isNotifOpen !== undefined ? state.isNotifOpen : false);
+      setIsNotifMobileOpen(state.isNotifMobileOpen !== undefined ? state.isNotifMobileOpen : false);
+      setIsAdminLoggedIn(state.isAdminLoggedIn !== undefined ? state.isAdminLoggedIn : false);
+      setDownloadPendingInfo(state.downloadPendingInfo !== undefined ? state.downloadPendingInfo : null);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    // Capture initial state on mount
+    const initialNavState = {
+      activeTab,
+      currentPage,
+      homeSearchQuery,
+      watchlistSearchQuery,
+      historySearchQuery,
+      activeDownloadMovie,
+      selectedSeries,
+      activePlayerMovie,
+      activeTrailerMovie,
+      isNotifOpen,
+      isNotifMobileOpen,
+      isAdminLoggedIn,
+      downloadPendingInfo
+    };
+    
+    if (!window.history.state) {
+      window.history.replaceState(initialNavState, "");
+    }
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
+  // History state serializer helper
+  const serializeState = (state: any) => {
+    if (!state) return "";
+    return JSON.stringify({
+      activeTab: state.activeTab,
+      currentPage: state.currentPage,
+      homeSearchQuery: state.homeSearchQuery,
+      watchlistSearchQuery: state.watchlistSearchQuery,
+      historySearchQuery: state.historySearchQuery,
+      activeDownloadMovie: state.activeDownloadMovie,
+      selectedSeries: state.selectedSeries,
+      activePlayerMovie: state.activePlayerMovie,
+      activeTrailerMovie: state.activeTrailerMovie,
+      isNotifOpen: state.isNotifOpen,
+      isNotifMobileOpen: state.isNotifMobileOpen,
+      isAdminLoggedIn: state.isAdminLoggedIn,
+      downloadPendingInfo: state.downloadPendingInfo
+    });
+  };
+
+  // Synchronize React state to browser history
+  useEffect(() => {
+    const currentState = {
+      activeTab,
+      currentPage,
+      homeSearchQuery,
+      watchlistSearchQuery,
+      historySearchQuery,
+      activeDownloadMovie,
+      selectedSeries,
+      activePlayerMovie,
+      activeTrailerMovie,
+      isNotifOpen,
+      isNotifMobileOpen,
+      isAdminLoggedIn,
+      downloadPendingInfo
+    };
+
+    const previousState = window.history.state;
+    const currentSerialized = serializeState(currentState);
+    const previousSerialized = serializeState(previousState);
+
+    if (currentSerialized !== previousSerialized) {
+      if (previousState) {
+        // Detect if only search queries changed
+        const onlySearchChanged = 
+          currentState.activeTab === previousState.activeTab &&
+          currentState.currentPage === previousState.currentPage &&
+          currentState.isNotifOpen === previousState.isNotifOpen &&
+          currentState.isNotifMobileOpen === previousState.isNotifMobileOpen &&
+          currentState.isAdminLoggedIn === previousState.isAdminLoggedIn &&
+          JSON.stringify(currentState.activeDownloadMovie) === JSON.stringify(previousState.activeDownloadMovie) &&
+          JSON.stringify(currentState.selectedSeries) === JSON.stringify(previousState.selectedSeries) &&
+          JSON.stringify(currentState.activePlayerMovie) === JSON.stringify(previousState.activePlayerMovie) &&
+          JSON.stringify(currentState.activeTrailerMovie) === JSON.stringify(previousState.activeTrailerMovie) &&
+          JSON.stringify(currentState.downloadPendingInfo) === JSON.stringify(previousState.downloadPendingInfo);
+
+        const wasSearching = 
+          (previousState.homeSearchQuery && previousState.homeSearchQuery.trim() !== "") ||
+          (previousState.watchlistSearchQuery && previousState.watchlistSearchQuery.trim() !== "") ||
+          (previousState.historySearchQuery && previousState.historySearchQuery.trim() !== "");
+
+        const isCurrentlySearching = 
+          (currentState.homeSearchQuery && currentState.homeSearchQuery.trim() !== "") ||
+          (currentState.watchlistSearchQuery && currentState.watchlistSearchQuery.trim() !== "") ||
+          (currentState.historySearchQuery && currentState.historySearchQuery.trim() !== "");
+
+        if (onlySearchChanged && wasSearching && isCurrentlySearching) {
+          // Replace state when typing continuously in the search input
+          window.history.replaceState(currentState, "");
+        } else {
+          // Push state for all other standard transitions
+          window.history.pushState(currentState, "");
+        }
+      } else {
+        // Fallback: replaceState on initial mount if state is empty
+        window.history.replaceState(currentState, "");
+      }
+    }
+  }, [
+    activeTab,
+    currentPage,
+    homeSearchQuery,
+    watchlistSearchQuery,
+    historySearchQuery,
+    activeDownloadMovie,
+    selectedSeries,
+    activePlayerMovie,
+    activeTrailerMovie,
+    isNotifOpen,
+    isNotifMobileOpen,
+    isAdminLoggedIn,
+    downloadPendingInfo
+  ]);
 
   // Reset page when search, genre, sorting, tab, or sub-tab changes
   useEffect(() => {
@@ -1209,7 +1429,7 @@ export default function App() {
   const handleResumeMovie = (movieTitle: string) => {
     const matchedMovie = movies.find(m => m.title === movieTitle);
     if (matchedMovie) {
-      setActivePlayerMovie(matchedMovie);
+      handlePlayMedia(matchedMovie);
     }
   };
 
@@ -1351,35 +1571,189 @@ export default function App() {
   };
 
   if (isOffline) {
+    const cachedMoviesStr = localStorage.getItem("moviemachi_active_catalog");
+    let hasCachedContent = false;
+    if (cachedMoviesStr) {
+      try {
+        const parsed = JSON.parse(cachedMoviesStr);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          hasCachedContent = true;
+        }
+      } catch (e) {}
+    }
+
+    const handleGoHome = () => {
+      if (hasCachedContent) {
+        setIsOffline(false);
+      } else {
+        setRetryMessage("No cached content found. Connection required.");
+        setTimeout(() => setRetryMessage(null), 3000);
+      }
+    };
+
+    const handleReload = () => {
+      window.location.reload();
+    };
+
     return (
-      <div className="relative min-h-screen text-gray-200 font-sans flex items-center justify-center p-4 select-none overflow-x-hidden bg-[#09090f] w-full">
+      <div className="relative min-h-screen text-gray-200 font-sans flex items-center justify-center p-4 sm:p-6 md:p-8 select-none overflow-x-hidden bg-[#050508] w-full">
+        {/* Animated glowing red ambient gradients */}
+        <div className="absolute inset-0 bg-radial-gradient from-transparent via-[#06060a]/90 to-[#030305] z-0 pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] sm:w-[800px] sm:h-[800px] bg-[#ff2d55]/8 rounded-full blur-[160px] pointer-events-none -z-10 animate-pulse duration-[6000ms]" />
+        <div className="absolute top-1/3 left-1/4 w-72 h-72 sm:w-96 sm:h-96 bg-[#ff6b00]/4 rounded-full blur-[140px] pointer-events-none -z-10" />
+
+        {/* Floating particles */}
+        {[...Array(8)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1.5 h-1.5 bg-[#ff2d55]/25 rounded-full blur-[0.5px] pointer-events-none"
+            animate={{
+              y: [0, -100, 0],
+              x: [0, (i % 2 === 0 ? 40 : -40), 0],
+              opacity: [0.1, 0.7, 0.1],
+            }}
+            transition={{
+              duration: 8 + i * 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            style={{
+              left: `${10 + i * 12}%`,
+              top: `${40 + (i * 8)}%`,
+            }}
+          />
+        ))}
+
+        {/* Soft Vignette Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black pointer-events-none z-0 opacity-60" />
+
         {/* Background Aurora */}
         <BackgroundAurora />
 
-        {/* Cinematic Premium Dark Centered Glass Container with Red Glow accent */}
-        <div className="relative w-full max-w-md sm:max-w-lg mx-auto bg-[#0d0e15]/75 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 sm:p-10 text-center shadow-[0_20px_50px_rgba(0,0,0,0.85),_0_0_50px_rgba(255,45,85,0.18)] flex flex-col items-center justify-center gap-6 max-h-[96vh] overflow-y-auto transform scale-100 transition-all duration-300">
+        {/* Cinematic Premium Glass Card Container */}
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="relative w-full max-w-lg mx-auto bg-[#0d0e15]/65 backdrop-blur-3xl border border-white/10 rounded-[32px] p-6 sm:p-10 text-center shadow-[0_30px_80px_rgba(0,0,0,0.9),_0_0_60px_rgba(255,45,85,0.15)] flex flex-col items-center justify-center gap-7 max-h-[96vh] overflow-y-auto z-10"
+        >
           
-          {/* Subtle logo vector laser line shine */}
-          <div className="absolute -top-10 left-10 right-10 h-[2px] bg-gradient-to-r from-transparent via-[#ff2d55]/40 to-transparent blur-md pointer-events-none" />
+          {/* Subtle laser sheen at the top of the container */}
+          <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#ff2d55]/50 to-transparent blur-[0.5px]" />
 
-          {/* Premium Logo branding with Red Ring Glow */}
-          <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#ff2d55] to-[#ff6b00] flex items-center justify-center shadow-[0_4px_25px_rgba(255,45,85,0.45)] select-none shrink-0 transform hover:scale-105 transition-transform duration-300">
-            <span className="text-3xl sm:text-4xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.45)]">🎬</span>
-            <div className="absolute -inset-1.5 bg-gradient-to-tr from-[#ff2d55]/20 to-amber-500/20 rounded-2xl blur-lg pointer-events-none -z-10 animate-pulse" />
-          </div>
+          {/* Logo with pulse and slide-in */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="flex flex-col items-center gap-2"
+          >
+            {/* Premium Logo branding with Red Ring Glow */}
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#ff2d55] to-[#ff6b00] flex items-center justify-center shadow-[0_8px_30px_rgba(255,45,85,0.4)] select-none shrink-0 transform hover:scale-105 transition-transform duration-300">
+              <span className="text-3xl sm:text-4xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.45)]">🎬</span>
+              <div className="absolute -inset-1.5 bg-gradient-to-tr from-[#ff2d55]/20 to-amber-500/20 rounded-2xl blur-lg pointer-events-none -z-10 animate-pulse" />
+            </div>
 
-          <div className="space-y-2.5 sm:space-y-3">
-            <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-widest uppercase bg-clip-text bg-gradient-to-r from-white via-stone-200 to-gray-400">
-              MovieMachi
-            </h1>
-            <div className="h-0.5 w-16 bg-gradient-to-r from-[#ff2d55] to-[#ff6b00] mx-auto rounded-full" />
+            <div className="text-center mt-2">
+              <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-widest uppercase bg-clip-text bg-gradient-to-r from-white via-stone-200 to-gray-400">
+                MovieMachi
+              </h1>
+              <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.18em] text-[#ff2d55] mt-1 select-none">
+                Premium Tamil Cinema Portal
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Cinematic Floating Screen Illustration */}
+          <motion.div 
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="relative w-64 h-36 sm:w-72 sm:h-40 bg-black/80 rounded-2xl border-2 border-white/10 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.9),_0_0_30px_rgba(255,45,85,0.15)] flex flex-col items-center justify-center group"
+          >
+            {/* Screen scanlines overlay */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,_rgba(0,0,0,0.25)_50%),_linear-gradient(90deg,_rgba(255,0,0,0.06),_rgba(0,255,0,0.02),_rgba(0,0,255,0.06))] bg-[size:100%_4px,_6px_100%] pointer-events-none opacity-40" />
             
-            <h2 className="font-display font-bold text-lg sm:text-xl text-red-500 tracking-wide mt-2">
-              No Internet Connection
+            {/* Subtle Red ambient back-glow */}
+            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-red-600/10 to-transparent blur-md" />
+
+            {/* No Signal CRT Color Bars Pattern (Subtle & Stylized in dark theme) */}
+            <div className="absolute top-0 inset-x-0 h-3 flex opacity-25">
+              <div className="flex-1 bg-white/60" />
+              <div className="flex-1 bg-yellow-400/40" />
+              <div className="flex-1 bg-cyan-400/40" />
+              <div className="flex-1 bg-green-500/40" />
+              <div className="flex-1 bg-magenta-500/40" />
+              <div className="flex-1 bg-red-650/40" />
+              <div className="flex-1 bg-blue-600/40" />
+            </div>
+
+            {/* Cinema Static Noise Glow and WiFiOff Icon */}
+            <div className="flex flex-col items-center gap-2 relative z-10">
+              <div className="relative">
+                <WifiOff size={36} className="text-red-500/80 drop-shadow-[0_0_10px_rgba(239,68,68,0.6)]" />
+                <motion.div 
+                  animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.8, 0.4] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute -inset-2 bg-red-500/10 rounded-full blur-md -z-10" 
+                />
+              </div>
+              
+              <span className="font-mono text-[9px] font-black tracking-[0.25em] text-red-500 bg-red-950/40 border border-red-500/30 px-2 py-0.5 rounded uppercase select-none animate-pulse">
+                NO SIGNAL
+              </span>
+            </div>
+
+            {/* Screen corner highlights */}
+            <div className="absolute top-2 left-2 w-1.5 h-1.5 border-t border-l border-white/20" />
+            <div className="absolute top-2 right-2 w-1.5 h-1.5 border-t border-r border-white/20" />
+            <div className="absolute bottom-2 left-2 w-1.5 h-1.5 border-b border-l border-white/20" />
+            <div className="absolute bottom-2 right-2 w-1.5 h-1.5 border-b border-r border-white/20" />
+          </motion.div>
+
+          <div className="space-y-2">
+            <h2 className="font-display font-black text-xl sm:text-2xl text-white tracking-wide">
+              You're Offline
             </h2>
             <p className="text-xs sm:text-sm text-gray-400 leading-relaxed max-w-sm mx-auto font-medium">
-              Please check your network and try again.
+              No internet connection detected. Reconnect to continue watching your favourite movies and series.
             </p>
+          </div>
+
+          {/* Premium Glass Information Card */}
+          <div className="w-full p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-3.5 text-left text-xs sm:text-sm backdrop-blur-md">
+            <div className="flex justify-between items-center pb-2.5 border-b border-white/5">
+              <span className="text-gray-400 font-semibold flex items-center gap-2">
+                <Globe size={14} className="text-[#ff2d55]" /> Connection Status
+              </span>
+              <span className="font-mono font-bold text-[#ff2d55] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#ff2d55] animate-ping" />
+                ● Offline
+              </span>
+            </div>
+            
+            <div className="flex justify-between items-center pb-2.5 border-b border-white/5">
+              <span className="text-gray-400 font-semibold flex items-center gap-2">
+                <Database size={14} className="text-amber-500" /> Offline Availability
+              </span>
+              {hasCachedContent ? (
+                <span className="font-mono font-bold text-emerald-400 flex items-center gap-1">
+                  ✓ Cached Content Available
+                </span>
+              ) : (
+                <span className="font-mono font-bold text-stone-500">
+                  No Cached Content
+                </span>
+              )}
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400 font-semibold flex items-center gap-2">
+                <AlertTriangle size={14} className="text-yellow-500" /> Network Status
+              </span>
+              <span className="font-mono text-xs text-stone-300 animate-pulse">
+                Waiting for internet...
+              </span>
+            </div>
           </div>
 
           {/* Diagnostics Guidance Box if triggered */}
@@ -1387,7 +1761,7 @@ export default function App() {
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full text-left p-4 rounded-2xl bg-white/4 border border-white/5 font-mono text-[10px] sm:text-xs leading-relaxed text-stone-300 whitespace-pre-line"
+              className="w-full text-left p-4 rounded-2xl bg-white/4 border border-white/5 font-mono text-[10px] sm:text-xs leading-relaxed text-stone-300 whitespace-pre-line shadow-inner max-h-48 overflow-y-auto"
             >
               {networkDiagnosticInfo}
             </motion.div>
@@ -1395,37 +1769,43 @@ export default function App() {
 
           {/* Status Message Line */}
           {retryMessage && (
-            <p className="text-[11px] font-mono font-bold text-amber-400 animate-pulse bg-amber-500/10 border border-amber-500/20 py-2 px-4 rounded-xl w-full">
+            <p className="text-[11px] font-mono font-bold text-amber-400 animate-pulse bg-amber-500/10 border border-amber-500/20 py-2.5 px-4 rounded-xl w-full">
               {retryMessage}
             </p>
           )}
 
           {/* Interactive buttons row */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full mt-2 shrink-0">
-            <button
-              onClick={handleRetryConnection}
-              disabled={isCheckingConnection}
-              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-[#ff2d55] to-[#ff6b00] hover:brightness-110 active:scale-95 disabled:opacity-50 text-white font-sans font-black text-xs tracking-wider uppercase transition-all shadow-[0_0_20px_rgba(255,45,85,0.45)] cursor-pointer flex items-center justify-center gap-2 select-none"
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full shrink-0">
+            <motion.button
+              onClick={handleReload}
+              whileTap={{ scale: 0.98 }}
+              className="w-full sm:w-1/2 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-[#ff2d55] to-[#ff6b00] hover:brightness-110 text-white font-sans font-black text-xs tracking-wider uppercase transition-all shadow-[0_0_20px_rgba(255,45,85,0.45)] cursor-pointer flex items-center justify-center gap-2 select-none animate-pulse hover:animate-none"
             >
-              <span>🔄</span> {isCheckingConnection ? "Checking..." : "Retry Connection"}
-            </button>
+              <RefreshCw size={14} className="animate-spin duration-3000" /> Retry Connection
+            </motion.button>
 
             <button
-              onClick={handleCheckNetwork}
-              className="w-full py-3.5 px-6 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-stone-200 hover:text-white font-sans font-black text-xs tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center gap-2 select-none"
+              onClick={handleGoHome}
+              className="w-full sm:w-1/2 py-3.5 px-6 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-stone-200 hover:text-white font-sans font-black text-xs tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center gap-2 select-none active:scale-95"
             >
-              <span>⚙️</span> Check Network
+              <Home size={14} /> Go Home
             </button>
           </div>
 
-          {/* Device & Remote navigation compatible indicator */}
-          <div className="border-t border-white/5 w-full pt-4 mt-1">
-            <p className="text-[9px] font-mono text-gray-500 uppercase tracking-widest leading-none">
+          {/* Diagnostics Button to reveal detailed platform specific options */}
+          <div className="border-t border-white/5 w-full pt-4 flex flex-col items-center gap-2.5">
+            <button 
+              onClick={handleCheckNetwork}
+              className="text-[10px] font-mono font-bold text-gray-500 hover:text-gray-300 uppercase tracking-widest cursor-pointer transition-colors"
+            >
+              ⚙️ Diagnostic Troubleshooting Guide
+            </button>
+            <p className="text-[8px] font-mono text-gray-600 uppercase tracking-widest leading-none">
               🎮 TV Remote & Keyboard Compatible
             </p>
           </div>
 
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -1444,7 +1824,6 @@ export default function App() {
         onSearchChange={setSearchQuery}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        totalCount={allMediaItems.length}
         theme={theme}
         onThemeToggle={toggleTheme}
         notifications={notifications}
@@ -1452,9 +1831,13 @@ export default function App() {
         onDismissNotification={handleDismissNotification}
         onPlayMovieTitle={handlePlayMovieTitle}
         isAdminLoggedIn={isAdminLoggedIn}
+        isNotifOpen={isNotifOpen}
+        setIsNotifOpen={setIsNotifOpen}
+        isNotifMobileOpen={isNotifMobileOpen}
+        setIsNotifMobileOpen={setIsNotifMobileOpen}
       />
 
-      <main className={`max-w-7xl mx-auto px-4 sm:px-6 md:px-8 ${isAdminLoggedIn ? "mt-0 pt-0 sm:pt-1" : "mt-6"} space-y-12`}>
+      <main className={`max-w-[2000px] mx-auto px-4 sm:px-6 md:px-8 ${isAdminLoggedIn ? "mt-0 pt-0 sm:pt-1" : "mt-6"} space-y-12`}>
         
         {/* Dynamic routing layouts depending on which activeTab tab is toggled */}
         {isAdminLoggedIn ? (
@@ -1469,7 +1852,7 @@ export default function App() {
             onAdminUpdateMovie={handleAdminUpdateMovie}
             onAdminDeleteMovie={handleAdminDeleteMovie}
             onFulfillRequestCMS={handleFulfillRequestCMS}
-            setActivePlayerMovie={setActivePlayerMovie}
+            setActivePlayerMovie={handlePlayMedia}
             series={series}
             onAdminAddSeries={handleAdminAddSeries}
             onAdminUpdateSeries={handleAdminUpdateSeries}
@@ -1582,6 +1965,8 @@ export default function App() {
                     hasWatchUrl = !!(slide.watchUrl && slide.watchUrl.trim() !== "");
                     hasDownloads = !!(slide.links && slide.links.some(l => l.url && l.url.trim() !== ""));
                   }
+
+                  const canWatch = hasWatchUrl || hasDownloads;
                   
                   return (
                     <div
@@ -1649,7 +2034,7 @@ export default function App() {
 
                           {slide.type === "series" ? (
                             <>
-                              {hasWatchUrl && (
+                              {canWatch && (
                                 <button 
                                   onClick={() => {
                                     handleSlideInteraction();
@@ -1669,7 +2054,7 @@ export default function App() {
                                     setSelectedSeries(slide as any);
                                   }}
                                   className={`h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-white/5 hover:bg-white/10 text-gray-200 font-display font-bold text-[9px] xs:text-[11px] sm:text-sm border border-white/10 flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer ${
-                                    !hasWatchUrl ? "shadow-[0_0_20px_rgba(239,68,68,0.25)] bg-red-650 hover:bg-red-550 border border-red-500/20 text-white" : ""
+                                    !canWatch ? "shadow-[0_0_20px_rgba(239,68,68,0.25)] bg-red-650 hover:bg-red-550 border border-red-500/20 text-white" : ""
                                   }`}
                                 >
                                   <Download size={11} className="xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
@@ -1679,11 +2064,11 @@ export default function App() {
                             </>
                           ) : (
                             <>
-                              {hasWatchUrl && (
+                              {canWatch && (
                                 <button 
                                   onClick={() => {
                                     handleSlideInteraction();
-                                    setActivePlayerMovie(slide);
+                                    handlePlayMedia(slide);
                                   }}
                                   className="h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-red-650 hover:bg-red-550 border border-red-500/20 text-white font-display font-bold text-[9px] xs:text-[11px] sm:text-sm flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(239,68,68,0.35)]"
                                 >
@@ -1699,7 +2084,7 @@ export default function App() {
                                     setActiveDownloadMovie(slide);
                                   }}
                                   className={`h-11 px-4 sm:px-6 sm:h-auto sm:py-3.5 rounded-xl md:rounded-2xl bg-white/5 hover:bg-white/10 text-gray-200 font-display font-bold text-[9px] xs:text-[11px] sm:text-sm border border-white/10 flex items-center justify-center gap-1 sm:gap-2 transition-all cursor-pointer ${
-                                    !hasWatchUrl ? "shadow-[0_0_20px_rgba(239,68,68,0.25)] bg-red-650 hover:bg-red-550 border border-red-500/20 text-white" : ""
+                                    !canWatch ? "shadow-[0_0_20px_rgba(239,68,68,0.25)] bg-red-650 hover:bg-red-550 border border-red-500/20 text-white" : ""
                                   }`}
                                 >
                                   <Download size={11} className="xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
@@ -1900,7 +2285,7 @@ export default function App() {
               {/* Movies Grid */}
               {paginatedMovies.length > 0 ? (
                 <div className="space-y-8">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 sm:gap-6">
                     {paginatedMovies.map((movie, movieIdx) => (
                       movie.type === "series" ? (
                         <SeriesCard
@@ -1915,7 +2300,7 @@ export default function App() {
                         <MovieCard
                           key={`${movie.title}-${movieIdx}`}
                           movie={movie as Movie}
-                          onWatch={setActivePlayerMovie}
+                          onWatch={handlePlayMedia}
                           onDownload={setActiveDownloadMovie}
                           isFavorite={watchlist.includes(movie.title)}
                           onToggleFavorite={handleToggleWatchlist}
@@ -2199,7 +2584,7 @@ export default function App() {
                 {/* Grid */}
                 {paginatedMovies.length > 0 ? (
                   <div className="space-y-8 animate-fade-in">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 sm:gap-6">
                       {paginatedMovies.map((movie, movieIdx) => (
                         movie.type === "series" ? (
                           <SeriesCard
@@ -2214,7 +2599,7 @@ export default function App() {
                           <MovieCard
                             key={`${movie.title}-${movieIdx}`}
                             movie={movie as Movie}
-                            onWatch={setActivePlayerMovie}
+                            onWatch={handlePlayMedia}
                             onDownload={setActiveDownloadMovie}
                             isFavorite={watchlist.includes(movie.title)}
                             onToggleFavorite={handleToggleWatchlist}
@@ -2341,7 +2726,7 @@ export default function App() {
             onAdminUpdateMovie={handleAdminUpdateMovie}
             onAdminDeleteMovie={handleAdminDeleteMovie}
             onFulfillRequestCMS={handleFulfillRequestCMS}
-            setActivePlayerMovie={setActivePlayerMovie}
+            setActivePlayerMovie={handlePlayMedia}
             series={series}
             onAdminAddSeries={handleAdminAddSeries}
             onAdminUpdateSeries={handleAdminUpdateSeries}
@@ -2365,6 +2750,33 @@ export default function App() {
         />
       )}
 
+      {/* Premium Toast/Message for unavailable links */}
+      <AnimatePresence>
+        {premiumMessage && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: -50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: -20 }}
+            className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-sm bg-[#0a0507]/95 border-2 border-[#ff2d55]/50 backdrop-blur-xl rounded-2xl p-4 shadow-[0_10px_30px_rgba(255,45,85,0.3)] flex items-center justify-between gap-3"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-[#ff2d55]/10 flex items-center justify-center border border-[#ff2d55]/30 shrink-0">
+                <X size={16} className="text-[#ff2d55]" />
+              </div>
+              <p className="text-xs sm:text-sm font-semibold text-gray-200">
+                {premiumMessage}
+              </p>
+            </div>
+            <button
+              onClick={() => setPremiumMessage(null)}
+              className="text-stone-400 hover:text-white cursor-pointer transition-colors p-1"
+            >
+              <X size={16} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Series Episodes Modal */}
       {selectedSeries && (
         <SeriesEpisodesModal
@@ -2380,9 +2792,9 @@ export default function App() {
         <MovieDetailsModal
           movie={activeDownloadMovie}
           onClose={() => setActiveDownloadMovie(null)}
-          onWatch={setActivePlayerMovie}
-          onDownloadMovie={(title, quality, url) => {
-            setDownloadPendingInfo({ name: title, quality, url });
+          onWatch={handlePlayMedia}
+          onDownloadMovie={(title, quality, url, image) => {
+            setDownloadPendingInfo({ name: title, quality, url, image: image || activeDownloadMovie.image });
           }}
         />
       )}
@@ -2514,7 +2926,7 @@ export default function App() {
                 <div className="pt-2 flex items-center gap-2">
                   <button
                     onClick={() => {
-                      setActivePlayerMovie(availNotification);
+                      handlePlayMedia(availNotification);
                       setAvailNotification(null);
                     }}
                     className="flex-1 py-1.5 px-3 rounded-xl bg-gradient-to-r from-[#ff2d55] to-[#ff6b00] hover:scale-[1.03] active:scale-95 text-white font-sans font-bold text-[10px] sm:text-xs tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(255,45,85,0.4)] flex items-center justify-center gap-1.5 cursor-pointer"
@@ -2537,7 +2949,7 @@ export default function App() {
 
       {/* Modern copyright and site credits footer */}
       <footer className="mt-16 py-8 border-t border-white/5 relative z-10 select-none bg-[#07070c]">
-        <div className="max-w-7xl mx-auto px-4 text-center space-y-3">
+        <div className="max-w-[2000px] mx-auto px-4 text-center space-y-3">
           <div className="flex items-center justify-center gap-2.5">
             <span className="text-xs font-display font-medium text-white">MovieMachi Engine.</span>
             <span className="w-1.5 h-1.5 rounded-full bg-red-500" />

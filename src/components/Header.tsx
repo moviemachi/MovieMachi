@@ -1,4 +1,4 @@
-import { Search, Flame, Clock, Heart, PlusCircle, Tv, Sun, Moon, Bell, BellRing, X, Check, Inbox } from "lucide-react";
+import { Search, Flame, Clock, Heart, PlusCircle, Sun, Moon, Bell, BellRing, X, Check, Inbox } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { AppNotification } from "../types";
 
@@ -7,7 +7,6 @@ interface HeaderProps {
   onSearchChange: (val: string) => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  totalCount: number;
   theme: "dark" | "light";
   onThemeToggle: () => void;
   notifications: AppNotification[];
@@ -15,6 +14,10 @@ interface HeaderProps {
   onDismissNotification: (id: string) => void;
   onPlayMovieTitle: (title: string) => void;
   isAdminLoggedIn?: boolean;
+  isNotifOpen: boolean;
+  setIsNotifOpen: (val: boolean) => void;
+  isNotifMobileOpen: boolean;
+  setIsNotifMobileOpen: (val: boolean) => void;
 }
 
 function formatNotifTime(createdAt: number): string {
@@ -33,17 +36,18 @@ export default function Header({
   onSearchChange, 
   activeTab, 
   setActiveTab, 
-  totalCount,
   theme,
   onThemeToggle,
   notifications,
   onMarkNotificationRead,
   onDismissNotification,
   onPlayMovieTitle,
-  isAdminLoggedIn = false
+  isAdminLoggedIn = false,
+  isNotifOpen,
+  setIsNotifOpen,
+  isNotifMobileOpen,
+  setIsNotifMobileOpen
 }: HeaderProps) {
-  const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [isNotifMobileOpen, setIsNotifMobileOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const notifMobileRef = useRef<HTMLDivElement>(null);
 
@@ -226,7 +230,7 @@ export default function Header({
     <header className="sticky top-0 z-40 w-full transition-all duration-300">
       {/* Outer blurred glass panel */}
       <div className="w-full bg-[#0a0a0f]/80 backdrop-blur-md border-b border-white/5 py-2.5 sm:py-4 px-3 sm:px-6 md:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+        <div className="max-w-[2000px] mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
           
           {/* Logo Brand presentation section */}
           <div className="flex items-center justify-between w-full md:w-auto">

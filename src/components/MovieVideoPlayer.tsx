@@ -330,9 +330,10 @@ export default function MovieVideoPlayer({ movie, onClose, isTrailer }: VideoPla
   };
 
   const fallbackVideoUrl = "https://assets.mixkit.co/videos/preview/mixkit-curious-cat-watching-tv-40847-large.mp4";
+  const resolvedDownloadUrl = movie.links?.find(l => l.url && l.url.trim() !== "")?.url;
   const sourceUrl = isTrailer
     ? (movie.trailerUrl || movie.watchUrl || fallbackVideoUrl)
-    : (movie.watchUrl || fallbackVideoUrl);
+    : (movie.watchUrl && movie.watchUrl.trim() !== "" ? movie.watchUrl : (resolvedDownloadUrl || fallbackVideoUrl));
 
   const formatTime = (secs: number) => {
     if (isNaN(secs) || secs === Infinity || secs < 0) return "00:00:00";

@@ -24,9 +24,13 @@ export default function MovieCard({
   const numericRating = movie.rating ? movie.rating.replace("/10", "") : "8.5";
   const hasWatchUrl = !!(movie.watchUrl && movie.watchUrl.trim() !== "");
   const hasDownloads = !!(movie.links && movie.links.some(l => l.url && l.url.trim() !== ""));
+  const canWatch = hasWatchUrl || hasDownloads;
 
   return (
-    <div className="group relative rounded-2xl overflow-hidden glass-card hover:shadow-[0_0_30px_rgba(239,68,68,0.25)] transition-all duration-500 border border-white/6 flex flex-col min-h-[290px] xs:min-h-[340px] sm:min-h-[450px] h-full">
+    <div 
+      onClick={() => onDownload(movie)}
+      className="group relative rounded-2xl overflow-hidden glass-card hover:shadow-[0_0_30px_rgba(239,68,68,0.25)] transition-all duration-500 border border-white/6 flex flex-col min-h-[240px] xs:min-h-[290px] sm:min-h-[390px] h-full cursor-pointer select-none"
+    >
       
       {/* Upper Poster viewport wrapper with scaling */}
       <div className="relative flex-1 overflow-hidden bg-neutral-900 pointer-events-none">
@@ -98,21 +102,10 @@ export default function MovieCard({
         {/* Hover overlay showcasing center play trigger icon */}
         {(hasWatchUrl || hasDownloads) && (
           <div 
-            className="absolute inset-0 bg-black/30 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto cursor-pointer" 
-            onClick={() => {
-              if (hasWatchUrl && !hasDownloads) {
-                onWatch(movie);
-              } else {
-                onDownload(movie);
-              }
-            }}
+            className="absolute inset-0 bg-black/30 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" 
           >
-            <div className="w-10 h-10 xs:w-14 xs:h-14 rounded-full bg-red-650/95 flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:bg-red-500">
-              {hasWatchUrl && !hasDownloads ? (
-                <Play size={16} fill="currentColor" className="text-white xs:w-5 xs:h-5 ml-0.5" />
-              ) : (
-                <Download size={16} className="text-white xs:w-5 xs:h-5" />
-              )}
+            <div className="w-10 h-10 xs:w-14 xs:h-14 rounded-full bg-red-650/95 flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform duration-300 shadow-[0_0_20px_rgba(239,68,68,0.4)]">
+              <Play size={16} fill="currentColor" className="text-white xs:w-5 xs:h-5 ml-0.5" />
             </div>
           </div>
         )}
@@ -125,10 +118,7 @@ export default function MovieCard({
         {/* Title and Release date meta information */}
         <div>
           <h4 
-            onClick={() => {
-              onDownload(movie);
-            }}
-            className="font-display font-medium text-xs xs:text-sm sm:text-base text-white hover:text-red-400 transition-colors cursor-pointer line-clamp-1 truncate"
+            className="font-display font-medium text-xs xs:text-sm sm:text-base text-white hover:text-red-400 transition-colors line-clamp-1 truncate"
           >
             {movie.movieName}
           </h4>
@@ -139,7 +129,7 @@ export default function MovieCard({
           </div>
         </div>
 
-        {/* Mini Drawer Exposing core Crew (Director, Cast, Action pills) */}
+        {/* Mini Drawer Exposing core Crew (Director, Cast) */}
         <div className="space-y-0.5 text-[9.5px] xs:text-[11px] sm:text-xs text-gray-400">
           <div className="flex items-center gap-1 truncate">
             <User size={11} className="text-gray-600 shrink-0 xs:w-3.5 xs:h-3.5" />
@@ -164,48 +154,6 @@ export default function MovieCard({
               {g}
             </span>
           ))}
-        </div>
-
-        {/* Interactive primary trigger block */}
-        <div className="space-y-1.5 sm:space-y-2 pt-1.5 sm:pt-2 border-t border-white/5">
-          {movie.trailerUrl && movie.trailerUrl.trim() !== "" && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                if (onPlayTrailer) onPlayTrailer(movie);
-              }}
-              className="w-full py-1.5 xs:py-2 rounded-lg sm:rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-400 font-display text-[9px] xs:text-[10px] sm:text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-98 select-none font-semibold"
-            >
-              <span>🎬 Watch Trailer</span>
-            </button>
-          )}
-
-          {(hasWatchUrl || hasDownloads) && (
-            <div className={`grid ${hasWatchUrl && hasDownloads ? "grid-cols-2" : "grid-cols-1"} gap-1.5 sm:gap-2`}>
-              {hasWatchUrl && (
-                <button
-                  onClick={() => onWatch(movie)}
-                  className="py-1.5 px-2 rounded-lg sm:rounded-xl bg-red-650 hover:bg-red-550 border border-red-500/25 text-white font-display text-[9px] xs:text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer hover:shadow-[0_0_12px_rgba(239,68,68,0.2)] transition-all"
-                >
-                  <Play size={9} fill="currentColor" className="xs:w-3 xs:h-3" />
-                  <span className="truncate">Watch Online</span>
-                </button>
-              )}
-
-              {hasDownloads && (
-                <button
-                  onClick={() => onDownload(movie)}
-                  className={`py-1.5 px-2 rounded-lg sm:rounded-xl text-gray-300 hover:text-white border border-white/5 font-display text-[9px] xs:text-[10px] sm:text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors ${
-                    !hasWatchUrl ? "bg-red-650 hover:bg-red-550 border-red-500/25 text-white hover:shadow-[0_0_12px_rgba(239,68,68,0.2)]" : "bg-white/4 hover:bg-white/10"
-                  }`}
-                >
-                  <Download size={9} className="xs:w-3 xs:h-3" />
-                  <span className="truncate">Downloads</span>
-                </button>
-              )}
-            </div>
-          )}
         </div>
 
       </div>
